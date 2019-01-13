@@ -5,23 +5,23 @@
  *      Author: erics
  */
 
+#include <Arduino.h>
+#include "Config.h"
 
 #ifndef ANALOG_H_
 #define ANALOG_H_
 
-#include "Arduino.h"
-#include "Config.h"
-
-class Analog
+namespace Analog
 {
-private:
-	int analogRaw[NUMBER_OF_ANALOG_PINS] = { 0 };
-	double analogScaled[NUMBER_OF_ANALOG_PINS] = { 0 };
-public:
+	namespace
+	{
+		int analogRaw[NUMBER_OF_ANALOG_PINS] = { 0 };
+		double analogScaled[NUMBER_OF_ANALOG_PINS] = { 0 };
+	}
+	void init();
 	double getScaledData(int ChannelNumber);
 	int getRawData(int ChannelNumber);
 	void updateData();
-	double getBatteryVoltage();
 };
 
 

@@ -32,6 +32,12 @@
 *.app
 
 #Project Files
+.cproject
+.project
+.settings/
 .mettadata/
 *Release/
 RemoteSystemsTempFiles
+/.metadata/
+
+*sloeber.ino.cpp

@@ -7,6 +7,10 @@
 
 #include "Analog.h"
 
+void Analog::init()
+{
+	// do we need to init anything? Maybe switch to 16bit adc mode?
+}
 void Analog::updateData()
 {
 	for (int i = 0; i < NUMBER_OF_ANALOG_PINS; ++i)
@@ -27,7 +31,3 @@ double Analog::getScaledData(int ChannelNumber)
 	return analogScaled[ChannelNumber];
 }
 
-double Analog::getBatteryVoltage()
-{
-	return getScaledData(8);
-}

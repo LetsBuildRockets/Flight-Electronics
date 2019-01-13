@@ -11,6 +11,7 @@
 #define BAUD_RATE 9600
 
 #define PIN_LED 13
+#define PIN_PAD_POWER 2
 
 #define NUMBER_OF_ANALOG_PINS 9
 
