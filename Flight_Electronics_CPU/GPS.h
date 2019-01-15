@@ -11,8 +11,10 @@
 #ifndef GPS_H_
 #define GPS_H_
 
-namespace GPS {
-	namespace {
+namespace GPS
+{
+	namespace
+	{
 		Adafruit_GPS _GPS(&GPSSERIAL);
 		IntervalTimer GPSIntervalTimer;
 	}
