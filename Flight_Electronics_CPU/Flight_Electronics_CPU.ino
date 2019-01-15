@@ -1,9 +1,11 @@
 #include <Arduino.h>
+#include <avr/interrupt.h>
 
 #include "Config.h"
 #include "Analog.h"
 #include "RTC.h"
 #include "Power.h"
+#include "GPS.h"
 
 void setup()
 {
@@ -12,9 +14,10 @@ void setup()
 	RTC::init();
 	Power::init();
 	Analog::init();
+	GPS::init();
 
 	Analog::updateData();
-	Serial.begin(BAUD_RATE);
+	Serial.begin(SERIAL_BAUD_RATE);
 }
 
 void loop()

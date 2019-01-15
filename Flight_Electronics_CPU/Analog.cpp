@@ -9,7 +9,7 @@
 
 void Analog::init()
 {
-	// do we need to init anything? Maybe switch to 16bit adc mode?
+	// TODO: do we need to init anything? Maybe switch to 16bit adc mode?
 }
 void Analog::updateData()
 {

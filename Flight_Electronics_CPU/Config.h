@@ -8,7 +8,10 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 
-#define BAUD_RATE 9600
+#define SERIAL_BAUD_RATE 115200
+
+#define GPSSERIAL Serial3 // PINS 7 and 8
+#define GPS_BAUD_RATE 9600
 
 #define PIN_LED 13
 #define PIN_PAD_POWER 2
