@@ -9,7 +9,16 @@
 
 void IMU::init()
 {
-	bno.getSensor(&sensorIMU);
+	Wire.setSCL(33);
+	Wire.setSDA(34);
+	if(!bno.begin())
+	{
+		Telemetry::printf(MSG_ERROR, "IMU NOT CONNECTED!\n");
+	}
+	else
+	{
+		Telemetry::printf(MSG_INFO, "IMU is connected\n");
+	}
 	bno.setExtCrystalUse(true);
 }
 

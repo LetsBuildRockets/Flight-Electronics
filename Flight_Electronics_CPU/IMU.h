@@ -11,6 +11,7 @@
 #include <utility/imumaths.h>
 
 #include "Config.h"
+#include "Telemetry.h"
 
 #ifndef IMU_H_
 #define IMU_H_
@@ -20,7 +21,6 @@ namespace IMU
 	namespace
 	{
 		Adafruit_BNO055 bno = Adafruit_BNO055(55);
-		sensor_t sensorIMU;
 	}
 	void init();
 	imu::Quaternion getQuat();

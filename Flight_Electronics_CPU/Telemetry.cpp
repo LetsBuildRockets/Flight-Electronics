@@ -19,11 +19,10 @@ void Telemetry::sendMSG(TELEMETRY_MSG_TYPE messageType, std::vector<uint8_t> buf
 	uint8_t _buffer[buffersize];
 	memcpy(_buffer + 1, buffer.data(), buffer.size() * sizeof(uint8_t));
 	_buffer[0] = (uint8_t) messageType;
-	//_buffer[bufferLength-1] = 0;
 	TELEMETRYSERIAL.write(_buffer, buffersize);
 }
 
-void Telemetry::printf(TELEMETRY_MSG_TYPE messageType, char * format, ...)
+void Telemetry::printf(TELEMETRY_MSG_TYPE messageType, const char * format, ...)
 {
 	char *buffer = (char *)malloc(128*sizeof(char));
 	va_list vargs;

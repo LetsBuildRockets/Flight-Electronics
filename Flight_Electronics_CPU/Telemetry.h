@@ -18,7 +18,7 @@ namespace Telemetry
 {
 	void init();
 	void sendMSG(TELEMETRY_MSG_TYPE messageType, std::vector<uint8_t> buffer);
-	void printf(TELEMETRY_MSG_TYPE messageType, char * format, ...);
+	void printf(TELEMETRY_MSG_TYPE messageType, const char * format, ...);
 };
 
 #endif /* TELEMETRY_H_ */
