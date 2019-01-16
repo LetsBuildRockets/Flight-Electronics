@@ -13,12 +13,12 @@ void IMU::init()
 	bno.setExtCrystalUse(true);
 }
 
-Quaternion IMU::getQuat()
+imu::Quaternion IMU::getQuat()
 {
 	return bno.getQuat();
 }
 
-Euler IMU::getEuler()
+sensors_vec_t IMU::getEuler()
 {
 	 sensors_event_t event;
 	 bno.getEvent(&event);

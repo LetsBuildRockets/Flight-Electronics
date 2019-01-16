@@ -6,6 +6,7 @@
 #include "RTC.h"
 #include "Power.h"
 #include "GPS.h"
+#include "Telemetry.h"
 
 void setup()
 {
@@ -15,9 +16,9 @@ void setup()
 	Power::init();
 	Analog::init();
 	GPS::init();
+	Telemetry::init();
 
 	Analog::updateData();
-	Serial.begin(SERIAL_BAUD_RATE);
 }
 
 void loop()
@@ -25,11 +26,11 @@ void loop()
 	digitalWrite(PIN_LED, HIGH);
 	delay(50);
 	digitalWrite(PIN_LED, LOW);
-	delay(950);
+	delay(1950);
 
 
-	Serial.printf("Battery Voltage: %.2f V\n", Power::getBatteryVoltage());
-	Serial.printf("Time: %s\n", RTC::getTimeString().c_str());
+	Telemetry::printf(MSG_INFO, "Battery Voltage: %.2f V\n", Power::getBatteryVoltage());
+	Telemetry::printf(MSG_INFO, "Time: %s\n", RTC::getTimeString().c_str());
 
 	Analog::updateData();
 }

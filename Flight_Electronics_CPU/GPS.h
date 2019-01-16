@@ -4,8 +4,9 @@
  *  Created on: Jan 13, 2019
  *      Author: erics
  */
-
+#include <Arduino.h>
 #include <Adafruit_GPS.h>
+
 #include "Config.h"
 
 #ifndef GPS_H_

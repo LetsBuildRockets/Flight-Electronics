@@ -5,13 +5,15 @@
  *      Author: erics
  */
 #include <Arduino.h>
+
 #include "Config.h"
 #include "Analog.h"
 
 #ifndef POWER_H_
 #define POWER_H_
 
-namespace Power {
+namespace Power
+{
 	void init();
 	double getBatteryVoltage();
 	void forceSwitchToInternalPower(bool bl);

@@ -5,15 +5,15 @@
  *      Author: erics
  */
 
-#include "Adafruit_BNO055.h"
-#include "Arduino.h"
-#include "Adafruit_Sensor.h"
-#include "utility/imumaths.h"
+#include <Arduino.h>
+#include <Adafruit_BNO055.h>
+#include <Adafruit_Sensor.h>
+#include <utility/imumaths.h>
+
+#include "Config.h"
+
 #ifndef IMU_H_
 #define IMU_H_
-
-typedef imu::Quaternion Quaternion;
-typedef imu::Vector<3> Euler;
 
 namespace IMU
 {
@@ -23,8 +23,8 @@ namespace IMU
 		sensor_t sensorIMU;
 	}
 	void init();
-	Quaternion getQuat();
-	Euler getEuler();
+	imu::Quaternion getQuat();
+	sensors_vec_t getEuler();
 	String getCalibration();
 
 };

@@ -6,6 +6,7 @@
  */
 
 #include <Arduino.h>
+
 #include "Config.h"
 
 #ifndef ANALOG_H_
