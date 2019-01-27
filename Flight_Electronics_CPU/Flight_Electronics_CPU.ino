@@ -8,6 +8,7 @@
 #include "GPS.h"
 #include "Telemetry.h"
 #include "IMU.h"
+#include "SoftScheduler.h"
 
 void setup()
 {
@@ -23,26 +24,39 @@ void setup()
 	Analog::init();
 	GPS::init();
 	IMU::init();
+	SoftScheduler::init();
 
 	pinMode(PIN_LED, OUTPUT);
 
 	Analog::updateData();
+
+	SoftScheduler::addTask(([]() {
+		float voltage = Power::getBatteryVoltage();
+		if (voltage < 18)
+		{
+			Telemetry::printf(MSG_WARNING, "Battery Voltage: %.2f V\n", voltage);
+		}
+		else
+		{
+			Telemetry::printf(MSG_INFO, "Battery Voltage: %.2f V\n", voltage);
+		}
+	}), (uint32_t) 10000, "Check Battery State");
+
+	SoftScheduler::addTask(([]() { digitalWriteFast(PIN_LED, !(digitalReadFast(PIN_LED))); }), (uint32_t) 500, "BLINKY");
+	SoftScheduler::addTask(([]() { Analog::updateData(); }), (uint32_t) 50, "Update Analog Data");
 }
 
 void loop()
 {
-	digitalWrite(PIN_LED, HIGH);
-	delay(50);
-	digitalWrite(PIN_LED, LOW);
-	delay(50);
+
+	//Telemetry::printf(MSG_INFO, "Battery Voltage: %.2f V\n", Power::getBatteryVoltage());
+	//Telemetry::printf(MSG_INFO, "Time: %s\n", RTC::getTimeString().c_str());
+
+	//sensors_vec_t eulerPos = IMU::getEuler();
+	//Telemetry::printf(MSG_IMU, "%f %f %f\n", eulerPos.roll, eulerPos.pitch, eulerPos.heading);
+	//Telemetry::printf(MSG_INFO, IMU::getCalibration().c_str());
 
 
-	Telemetry::printf(MSG_INFO, "Battery Voltage: %.2f V\n", Power::getBatteryVoltage());
-	Telemetry::printf(MSG_INFO, "Time: %s\n", RTC::getTimeString().c_str());
-
-	sensors_vec_t eulerPos = IMU::getEuler();
-	Telemetry::printf(MSG_IMU, "%f %f %f\n", eulerPos.roll, eulerPos.pitch, eulerPos.heading);
-	Telemetry::printf(MSG_INFO, IMU::getCalibration().c_str());
-
-	Analog::updateData();
+	SoftScheduler::tickOnce();
 }
+

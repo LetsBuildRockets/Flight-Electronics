@@ -10,7 +10,12 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 
-#define TELEMETRYSERIAL Serial
+#define DEBUG 1
+
+#define DEBUGSERIAL Serial
+#define DEBUG_BAUD_RATE 115200
+
+#define TELEMETRYSERIAL Serial1
 #define TELEMETRY_BAUD_RATE 57600
 
 #define GPSSERIAL Serial3 // PINS 7 and 8
@@ -18,6 +23,21 @@
 
 #define PIN_LED 13
 #define PIN_PAD_POWER 2
+
+
+// APRS Information
+#define PTT_PIN 31 // Push to talk pin
+
+// Set your callsign and SSID here. Common values for the SSID are
+#define S_CALLSIGN      "KB1ZHC"
+#define S_CALLSIGN_ID   1   // 11 is usually for balloons
+// Destination callsign: APRS (with SSID=0) is usually okay.
+#define D_CALLSIGN      "APRS"
+#define D_CALLSIGN_ID   0
+// Symbol Table: '/' is primary table '\' is secondary table
+#define SYMBOL_TABLE '/'
+// Primary Table Symbols: /O=balloon, /-=House, /v=Blue Van, />=Red Car
+#define SYMBOL_CHAR 'v'
 
 #define NUMBER_OF_ANALOG_PINS 9
 
