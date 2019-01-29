@@ -7,7 +7,7 @@
 
 #include <Arduino.h>
 #include <Wire.h>
-#include "FastCRC/FastCRC.h"
+#include <FastCRC.h>
 
 #include "Config.h"
 #include "Telemetry.h"
