@@ -20,6 +20,7 @@ void Telemetry::sendMSG(TELEMETRY_MSG_TYPE messageType, std::vector<uint8_t> buf
 	memcpy(_buffer + 1, buffer.data(), buffer.size() * sizeof(uint8_t));
 	_buffer[0] = (uint8_t) messageType;
 	_buffer[bufferLength - 1] = '\0';
+	TELEMETRYSERIAL.flush();
 	TELEMETRYSERIAL.write(_buffer, buffersize);
 #if DEBUG
 	char __buffer[buffersize + 20];
@@ -39,4 +40,5 @@ void Telemetry::printf(TELEMETRY_MSG_TYPE messageType, const char * format, ...)
 	std::vector<uint8_t> data(&buffer[0], &buffer[str.length()]);
 	Telemetry::sendMSG(messageType, data);
 	va_end(vargs);
+	free(buffer);
 }

@@ -16,12 +16,12 @@ namespace Analog
 {
 	namespace
 	{
-		int analogRaw[NUMBER_OF_ANALOG_PINS] = { 0 };
+		double analogVoltage[NUMBER_OF_ANALOG_PINS] = { 0 };
 		double analogScaled[NUMBER_OF_ANALOG_PINS] = { 0 };
 	}
 	void init();
 	double getScaledData(int ChannelNumber);
-	int getRawData(int ChannelNumber);
+	double getVoltage(int ChannelNumber);
 	void updateData();
 };
 

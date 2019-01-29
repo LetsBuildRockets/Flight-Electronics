@@ -19,6 +19,10 @@ double Power::getBatteryVoltage()
 
 void Power::forceSwitchToInternalPower(bool bl)
 {
-	digitalWrite(PIN_PAD_POWER, bl);
+	digitalWriteFast(PIN_PAD_POWER, bl);
 }
 
+bool Power::isOnInternalPower()
+{
+	return digitalReadFast(PIN_PAD_POWER);
+}

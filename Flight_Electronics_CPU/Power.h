@@ -17,6 +17,7 @@ namespace Power
 	void init();
 	double getBatteryVoltage();
 	void forceSwitchToInternalPower(bool bl);
+	bool isOnInternalPower();
 };
 
 #endif /* POWER_H_ */

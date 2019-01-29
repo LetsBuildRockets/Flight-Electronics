@@ -32,22 +32,22 @@ void SoftScheduler::init() {
 
 void SoftScheduler::addTask(void (*fun_ptr)(), uint32_t interval)
 {
-	addTask(fun_ptr, interval, "null");
+	addTask(fun_ptr, interval, 0, "null");
 }
 
-
-void SoftScheduler::addTask(void (*fun_ptr)(), uint32_t interval, String name)
+void SoftScheduler::addTask(void (*fun_ptr)(), uint32_t interval, uint32_t delay, String name)
 {
 	Task newtask;
 	newtask.fun_ptr = fun_ptr;
 	newtask.interval = interval;
-	newtask.lastExecuteTime = millis();
+	newtask.lastExecuteTime = millis()-interval+delay;
 	newtask.name = name;
 
 	taskList.push_back(newtask);
 	if(taskList.size() > 50)
 	{
 		Telemetry::printf(MSG_WARNING, "The scheduler queue is more than 50 deep!");
+		DEBUGSERIAL.printf("The scheduler queue is more than 50 deep!");
 	}
 }
 
@@ -84,4 +84,9 @@ void SoftScheduler::tickOnce()
 double SoftScheduler::getAverageJitter()
 {
 	return averageJitter;
+}
+
+int SoftScheduler::getQueueSize()
+{
+	return taskList.size();
 }

@@ -39,20 +39,22 @@
 // Primary Table Symbols: /O=balloon, /-=House, /v=Blue Van, />=Red Car
 #define SYMBOL_CHAR 'v'
 
+#define ALTIMETER_ADDRESS 0x63 // 7 bit address
+
 #define NUMBER_OF_ANALOG_PINS 9
 
-typedef double(*TransferFunctionPointer)(int);
+typedef double(*TransferFunctionPointer)(double);
 const TransferFunctionPointer ANALOG_TRANSFER_FUNCTIONS[NUMBER_OF_ANALOG_PINS] =
 {
-		[](int raw) -> double { return raw*1; }, // 0
-		[](int raw) -> double { return raw*2; }, // 1
-		[](int raw) -> double { return raw*3; }, // 2
-		[](int raw) -> double { return raw*4; }, // 3
-		[](int raw) -> double { return raw*5; }, // 4
-		[](int raw) -> double { return raw*6; }, // 5
-		[](int raw) -> double { return raw*7; }, // 6
-		[](int raw) -> double { return raw*8; }, // 7
-		[](int raw) -> double { return 3.3*raw/1024.0*(15+2.2)/(2.2); } // 8 - Battery Voltage
+		[](double raw) -> double { return raw*1; }, // 0
+		[](double raw) -> double { return raw*2; }, // 1
+		[](double raw) -> double { return raw*3; }, // 2
+		[](double raw) -> double { return raw*4; }, // 3
+		[](double raw) -> double { return raw*5; }, // 4
+		[](double raw) -> double { return raw*6; }, // 5
+		[](double raw) -> double { return raw*7; }, // 6
+		[](double raw) -> double { return raw*8; }, // 7
+		[](double raw) -> double { return raw*(15+2.2)/(2.2); } // 8 - Battery Voltage
 };
 
 enum TELEMETRY_MSG_TYPE

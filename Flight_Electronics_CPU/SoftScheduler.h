@@ -29,10 +29,11 @@ namespace SoftScheduler
 		double averageJitter = 0;
 	}
 	void addTask(void (*fun_ptr)(void), uint32_t interval);
-	void addTask(void (*fun_ptr)(void), uint32_t interval, String name);
+	void addTask(void (*fun_ptr)(void), uint32_t interval, uint32_t delay, String name);
 	void init();
 	void tickOnce();
 	double getAverageJitter();
+	int getQueueSize();
 };
 
 #endif /* SOFTSCHEDULER_H_ */

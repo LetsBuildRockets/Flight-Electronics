@@ -15,15 +15,15 @@ void Analog::updateData()
 {
 	for (int i = 0; i < NUMBER_OF_ANALOG_PINS; ++i)
 	{
-		analogRaw[i] = analogRead(i);
-		analogScaled[i] = ANALOG_TRANSFER_FUNCTIONS[i](analogRaw[i]);
+		analogVoltage[i] = analogRead(i) * 3.3/1024.0;
+		analogScaled[i] = ANALOG_TRANSFER_FUNCTIONS[i](analogVoltage[i]);
 	}
 
 }
 
-int Analog::getRawData(int ChannelNumber)
+double Analog::getVoltage(int ChannelNumber)
 {
-	return analogRaw[ChannelNumber];
+	return analogVoltage[ChannelNumber];
 }
 
 double Analog::getScaledData(int ChannelNumber)
