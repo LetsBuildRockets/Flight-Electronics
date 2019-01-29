@@ -1,0 +1,6 @@
+[submodule "Flight_Electronics_CPU/aprs_teensy31"]
+	path = Flight_Electronics_CPU/aprs_teensy31
+	url = https://github.com/ericsims/aprs_teensy31
+[submodule "Flight_Electronics_CPU/FastCRC"]
+	path = Flight_Electronics_CPU/FastCRC
+	url = https://github.com/FrankBoesing/FastCRC
