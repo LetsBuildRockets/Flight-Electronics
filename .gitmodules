@@ -4,3 +4,6 @@
 [submodule "Flight_Electronics_CPU/libraries/FastCRC"]
 	path = Flight_Electronics_CPU/libraries/FastCRC
 	url = https://github.com/FrankBoesing/FastCRC
+[submodule "Flight_Electronics_CPU/libraries/SdFAT"]
+	path = Flight_Electronics_CPU/libraries/SdFAT
+	url = https://github.com/greiman/SdFat

@@ -9,6 +9,7 @@
 #include "IMU.h"
 #include "SoftScheduler.h"
 #include "Altimeter.h"
+#include "Logger.h"
 
 void setup()
 {
@@ -25,6 +26,7 @@ void setup()
 	GPS::init();
 	IMU::init();
 	SoftScheduler::init();
+	Logger::init();
 
 	pinMode(PIN_LED, OUTPUT);
 
@@ -53,6 +55,10 @@ void checkBatteryStatus()
 {
 	float voltage = Power::getBatteryVoltage();
 	if (voltage < 18)
+	{
+		Telemetry::printf(MSG_ERROR, "Battery voltage CRITICAL! Voltage: %.2f V\n", voltage);
+	}
+	else if (voltage < 22.2)
 	{
 		Telemetry::printf(MSG_WARNING, "Battery voltage low! Voltage: %.2f V\n", voltage);
 	}
