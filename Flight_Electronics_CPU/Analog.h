@@ -16,8 +16,8 @@ namespace Analog
 {
 	namespace
 	{
-		double analogVoltage[NUMBER_OF_ANALOG_PINS] = { 0 };
-		double analogScaled[NUMBER_OF_ANALOG_PINS] = { 0 };
+		volatile double analogVoltage[NUMBER_OF_ANALOG_PINS] = { 0 };
+		volatile double analogScaled[NUMBER_OF_ANALOG_PINS] = { 0 };
 	}
 	void init();
 	double getScaledData(int ChannelNumber);

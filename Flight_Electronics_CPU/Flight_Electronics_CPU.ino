@@ -7,7 +7,7 @@
 #include "GPS.h"
 #include "Telemetry.h"
 #include "IMU.h"
-#include "SoftScheduler.h"
+#include "Scheduler.h"
 #include "Altimeter.h"
 #include "Logger.h"
 
@@ -25,24 +25,28 @@ void setup()
 	Analog::init();
 	GPS::init();
 	IMU::init();
-	SoftScheduler::init();
+	Scheduler::init();
 	Logger::init();
 
 	pinMode(PIN_LED, OUTPUT);
 
 	Analog::updateData();
 
-	SoftScheduler::addTask(Analog::updateData, (uint32_t) 50, 0, "Update Analog Data");
-	SoftScheduler::addTask(([]() { digitalWriteFast(PIN_LED, !(digitalReadFast(PIN_LED))); }), (uint32_t) 500, 5, "Blink");
-	SoftScheduler::addTask(getIMUData, 50, 0, "IMU update");
-	SoftScheduler::addTask(([]() { Telemetry::printf(MSG_INFO, "IMU Calibration: %s\n", IMU::getCalibration().c_str()); }), 5000, 0, "IMU print calibration info");
-	SoftScheduler::addTask(([]() { Telemetry::printf(MSG_INFO, "average Jitter: %.2f ms\n", SoftScheduler::getAverageJitter()); }), 5000, 100, "print average jitter");
-	SoftScheduler::addTask(checkBatteryStatus, (uint32_t) 10000, 200, "Check Battery State");
+	Scheduler::addTask(HIGH_PRIORITY, Analog::updateData, 50000ul, 0, "Update Analog Data");
+	Scheduler::addTask(LOW_PRIORITY, ([]() { digitalWriteFast(PIN_LED, !(digitalReadFast(PIN_LED))); }), 500000ul, 0, "Blink");
+	Scheduler::addTask(LOW_PRIORITY, getIMUData, 100000, 0, "IMU update");
+	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "IMU Calibration: %s\n", IMU::getCalibration().c_str()); }), 5000000ul, 0, "IMU print calibration info");
+	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "average Jitter: %.2f us\n", Scheduler::getAverageJitter()); }), 5000000ul, 0, "print average jitter");
+	Scheduler::addTask(LOW_PRIORITY, checkBatteryStatus, 10000000ul, 0, "Check Battery State");
+	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "Free mem: %lu kB\n", FreeMem()/1000); }), 5000000ul, 0, "mem ussage");
+
+
+	Scheduler::startHwTimer();
 }
 
 void loop()
 {
-	SoftScheduler::tickOnce();
+	Scheduler::tickSoft();
 }
 
 void getIMUData()
