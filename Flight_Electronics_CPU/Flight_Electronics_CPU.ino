@@ -32,6 +32,15 @@ void setup()
 
 	Analog::updateData();
 
+	// TODO: sequencer
+	// TODO: Flight Calculator
+	// TODO: read from altimeter, filter data, differentiate
+	// TODO: SD card buffering
+	// TODO: shift out for digital
+	// TODO: AX-12A Servo
+	// TODO: GPS
+	// TODO: APRS
+
 	SoftScheduler::addTask(Analog::updateData, (uint32_t) 50, 0, "Update Analog Data");
 	SoftScheduler::addTask(([]() { digitalWriteFast(PIN_LED, !(digitalReadFast(PIN_LED))); }), (uint32_t) 500, 5, "Blink");
 	SoftScheduler::addTask(getIMUData, 50, 0, "IMU update");

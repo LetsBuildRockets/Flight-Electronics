@@ -31,6 +31,7 @@ namespace Altimeter
 	uint8_t generate8bitWordCRC8(uint8_t);
 	uint8_t generate16bitWordCRC8(uint16_t);
 	void readBytes(uint8_t* buf, uint8_t len);
+	void getNewSample();
 };
 
 #endif /* ALTIMETER_H_ */
