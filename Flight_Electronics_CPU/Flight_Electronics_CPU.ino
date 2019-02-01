@@ -7,26 +7,31 @@
 #include "GPS.h"
 #include "Telemetry.h"
 #include "IMU.h"
-#include "SoftScheduler.h"
+#include "Scheduler.h"
 #include "Altimeter.h"
 #include "Logger.h"
 
 void setup()
 {
+	DEBUGSERIAL.begin(DEBUG_BAUD_RATE);
+	delay(2000);
+
+	DEBUGSERIAL.print("booting....\n");
+
+	RTC::init();
 	Telemetry::init();
+	Logger::init();
 
 	delay(2000);
 
     Telemetry::printf(MSG_INFO, "***Built on  %s  at  %s***\n", __DATE__, __TIME__);
 
 	Altimeter::init();
-	RTC::init();
 	Power::init();
 	Analog::init();
 	GPS::init();
 	IMU::init();
-	SoftScheduler::init();
-	Logger::init();
+	Scheduler::init();
 
 	pinMode(PIN_LED, OUTPUT);
 
@@ -40,18 +45,23 @@ void setup()
 	// TODO: AX-12A Servo
 	// TODO: GPS
 	// TODO: APRS
+	Scheduler::addTask(HIGH_PRIORITY, Analog::updateData, 50000ul, 0, "Update Analog Data");
+	Scheduler::addTask(LOW_PRIORITY, ([]() { digitalWriteFast(PIN_LED, !(digitalReadFast(PIN_LED))); }), 500000ul, 0, "Blink");
+	Scheduler::addTask(LOW_PRIORITY, getIMUData, 100000, 0, "IMU update");
+	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "IMU Calibration: %s\n", IMU::getCalibration().c_str()); }), 5000000ul, 0, "IMU print calibration info");
+	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "average Jitter: %.2f us\n", Scheduler::getAverageJitter()); }), 5000000ul, 0, "print average jitter");
+	Scheduler::addTask(LOW_PRIORITY, checkBatteryStatus, 10000000ul, 0, "Check Battery State");
+	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "Free mem: %lu kB\n", FreeMem()/1000); }), 5000000ul, 0, "mem ussage");
 
-	SoftScheduler::addTask(Analog::updateData, (uint32_t) 50, 0, "Update Analog Data");
-	SoftScheduler::addTask(([]() { digitalWriteFast(PIN_LED, !(digitalReadFast(PIN_LED))); }), (uint32_t) 500, 5, "Blink");
-	SoftScheduler::addTask(getIMUData, 50, 0, "IMU update");
-	SoftScheduler::addTask(([]() { Telemetry::printf(MSG_INFO, "IMU Calibration: %s\n", IMU::getCalibration().c_str()); }), 5000, 0, "IMU print calibration info");
-	SoftScheduler::addTask(([]() { Telemetry::printf(MSG_INFO, "average Jitter: %.2f ms\n", SoftScheduler::getAverageJitter()); }), 5000, 100, "print average jitter");
-	SoftScheduler::addTask(checkBatteryStatus, (uint32_t) 10000, 200, "Check Battery State");
+
+	Scheduler::startHwTimer();
+
 }
 
 void loop()
 {
-	SoftScheduler::tickOnce();
+	Scheduler::tickSoft();
+	delayMicroseconds(100);
 }
 
 void getIMUData()

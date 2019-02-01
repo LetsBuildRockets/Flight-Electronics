@@ -5,6 +5,10 @@
  *      Author: erics
  */
 
+
+#ifndef ALTIMETER_H_
+#define ALTIMETER_H_
+
 #include <Arduino.h>
 #include <Wire.h>
 #include <FastCRC.h>
@@ -12,14 +16,11 @@
 #include "Config.h"
 #include "Telemetry.h"
 
-#ifndef ALTIMETER_H_
-#define ALTIMETER_H_
-
-
 #define ALTIMITER_MODE_LOW_POWER 0x401A
 #define ALTIMETER_MODE_NORMAL 0x48A3
 #define ALTIMETER_MODE_LOW_NOISE 0x5059
 #define ALTIMETER_MODE_ULTRA_LOW_NOISE 0x58E0
+
 namespace Altimeter
 {
 	namespace

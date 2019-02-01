@@ -16,9 +16,12 @@ time_t RTC::getTime()
 	return Teensy3Clock.get();
 }
 
-String RTC::getTimeString()
+String RTC::getTimeString(bool useDelimeter)
 {
     char buffer[100];
-    sprintf(buffer, "%04d-%02d-%02dT%02d:%02d:%02d", year(), day(), month(), hour(), minute(), second());
+    if(useDelimeter)
+    	sprintf(buffer, "%04d-%02d-%02dT%02d:%02d:%02d", year(), day(), month(), hour(), minute(), second());
+    else
+    	sprintf(buffer, "%04d%02d%02dT%02d%02d%02d", year(), day(), month(), hour(), minute(), second());
     return String(buffer);
 }

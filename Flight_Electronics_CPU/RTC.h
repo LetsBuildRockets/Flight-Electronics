@@ -5,20 +5,21 @@
  *      Author: erics
  */
 
+
+#ifndef RTC_H_
+#define RTC_H_
+
 #include <Arduino.h>
 #include <String.h>
 #include <TimeLib.h>
 
 #include "Config.h"
 
-#ifndef RTC_H_
-#define RTC_H_
-
 namespace RTC
 {
 	void init();
 	time_t getTime();
-	String getTimeString();
+	String getTimeString(bool useDelimiter = true);
 };
 
 #endif /* RTC_H_ */
