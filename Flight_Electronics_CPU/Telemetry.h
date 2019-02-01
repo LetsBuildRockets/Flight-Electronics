@@ -20,8 +20,9 @@
 namespace Telemetry
 {
 	void init();
-	void sendMSG(TELEMETRY_MSG_TYPE messageType, std::vector<uint8_t> buffer);
+	void sendMSG(TELEMETRY_MSG_TYPE messageType, uint8_t *buffer, size_t bufferLength, bool logToSDCard = true);
 	void printf(TELEMETRY_MSG_TYPE messageType, const char * format, ...);
+	void printfNOLOG(TELEMETRY_MSG_TYPE messageType, const char * format, ...);
 };
 
 #endif /* TELEMETRY_H_ */

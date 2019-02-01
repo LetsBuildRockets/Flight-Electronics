@@ -12,22 +12,18 @@ void Telemetry::init()
 	TELEMETRYSERIAL.begin(TELEMETRY_BAUD_RATE);
 }
 
-void Telemetry::sendMSG(TELEMETRY_MSG_TYPE messageType, std::vector<uint8_t> buffer)
+void Telemetry::sendMSG(TELEMETRY_MSG_TYPE messageType, uint8_t *buffer, size_t bufferLength, bool logToSDCard)
 {
-	int bufferLength = (buffer.size() + 2);
-	int buffersize = bufferLength * sizeof(uint8_t);
-	uint8_t _buffer[buffersize];
-	memcpy(_buffer + 1, buffer.data(), buffer.size() * sizeof(uint8_t));
+	bufferLength += 2;
+	uint8_t _buffer[bufferLength];
+	memcpy(_buffer + 1, buffer, bufferLength);
 	_buffer[0] = (uint8_t) messageType;
 	_buffer[bufferLength - 1] = '\0';
 	TELEMETRYSERIAL.flush();
-	TELEMETRYSERIAL.write(_buffer, buffersize);
-	Logger::log((const char*)_buffer, buffersize);
+	TELEMETRYSERIAL.write(_buffer, bufferLength);
+	if(logToSDCard) Logger::log((const char*)_buffer, bufferLength);
 #if DEBUG
-	char __buffer[buffersize + 20];
-	strcpy(__buffer, "Telemetry msg: ");
-	strcpy(__buffer, (const char*)(_buffer));
-	DEBUGSERIAL.println(__buffer);
+	DEBUGSERIAL.printf("Telemetry msg: %s\n", _buffer);
 #endif
 }
 
@@ -37,9 +33,18 @@ void Telemetry::printf(TELEMETRY_MSG_TYPE messageType, const char * format, ...)
 	va_list vargs;
 	va_start(vargs, format);
 	vsprintf(buffer, format, vargs);
-	String str(buffer);
-	std::vector<uint8_t> data(&buffer[0], &buffer[str.length()]);
-	Telemetry::sendMSG(messageType, data);
+	Telemetry::sendMSG(messageType, (uint8_t*)buffer, (size_t) String(buffer).length(), true);
+	va_end(vargs);
+	free(buffer);
+}
+
+void Telemetry::printfNOLOG(TELEMETRY_MSG_TYPE messageType, const char * format, ...)
+{
+	char *buffer = (char *)malloc(128*sizeof(char));
+	va_list vargs;
+	va_start(vargs, format);
+	vsprintf(buffer, format, vargs);
+	Telemetry::sendMSG(messageType, (uint8_t*)buffer, (size_t) String(buffer).length(), false);
 	va_end(vargs);
 	free(buffer);
 }

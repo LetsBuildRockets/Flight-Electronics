@@ -11,6 +11,7 @@
 #define LOGGER_H_
 
 #define USE_SDIO 1
+#define SD_ERROR_LIMIT 2
 
 #include <Arduino.h>
 #include  <SdFAT.h>
@@ -26,6 +27,8 @@ namespace Logger
 		SdFatSdio sd;
 		SdFile logFile;
 		String filename;
+		bool fileOpen = false;
+		uint8_t numberOfSDCardError = 0;
 	}
 	void init();
 	void printf(const char * format, ...);

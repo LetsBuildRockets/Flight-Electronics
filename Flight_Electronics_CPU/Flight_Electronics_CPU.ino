@@ -13,9 +13,11 @@
 
 void setup()
 {
+	DEBUGSERIAL.begin(DEBUG_BAUD_RATE);
 	delay(2000);
 
-	DEBUGSERIAL.begin(DEBUG_BAUD_RATE);
+	DEBUGSERIAL.print("booting....\n");
+
 	RTC::init();
 	Telemetry::init();
 	Logger::init();
