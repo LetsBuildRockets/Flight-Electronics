@@ -4,15 +4,16 @@
  *  Created on: Jan 26, 2019
  *      Author: erics
  */
+
+#ifndef SOFTSCHEDULER_H_
+#define SOFTSCHEDULER_H_
+
 #include <Arduino.h>
 #include <queue>
 #include <IntervalTimer.h>
 
 #include "Config.h"
 #include "Telemetry.h"
-
-#ifndef SOFTSCHEDULER_H_
-#define SOFTSCHEDULER_H_
 
 #define PIT_id 0 // which timer do we want to use. If you change this you also must change the ISR in Scheduler.cpp
 typedef void (*ISR)();

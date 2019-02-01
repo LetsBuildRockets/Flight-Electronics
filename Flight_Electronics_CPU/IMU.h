@@ -5,6 +5,10 @@
  *      Author: erics
  */
 
+
+#ifndef IMU_H_
+#define IMU_H_
+
 #include <Arduino.h>
 #include <Adafruit_BNO055.h>
 #include <Adafruit_Sensor.h>
@@ -12,9 +16,6 @@
 
 #include "Config.h"
 #include "Telemetry.h"
-
-#ifndef IMU_H_
-#define IMU_H_
 
 namespace IMU
 {

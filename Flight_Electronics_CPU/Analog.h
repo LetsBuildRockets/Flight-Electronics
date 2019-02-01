@@ -5,12 +5,13 @@
  *      Author: erics
  */
 
-#include <Arduino.h>
-
-#include "Config.h"
 
 #ifndef ANALOG_H_
 #define ANALOG_H_
+
+#include <Arduino.h>
+
+#include "Config.h"
 
 namespace Analog
 {

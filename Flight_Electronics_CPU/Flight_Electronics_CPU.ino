@@ -13,20 +13,23 @@
 
 void setup()
 {
+	delay(2000);
+
+	DEBUGSERIAL.begin(DEBUG_BAUD_RATE);
+	RTC::init();
 	Telemetry::init();
+	Logger::init();
 
 	delay(2000);
 
     Telemetry::printf(MSG_INFO, "***Built on  %s  at  %s***\n", __DATE__, __TIME__);
 
 	Altimeter::init();
-	RTC::init();
 	Power::init();
 	Analog::init();
 	GPS::init();
 	IMU::init();
 	Scheduler::init();
-	Logger::init();
 
 	pinMode(PIN_LED, OUTPUT);
 
@@ -47,6 +50,7 @@ void setup()
 void loop()
 {
 	Scheduler::tickSoft();
+	delayMicroseconds(100);
 }
 
 void getIMUData()

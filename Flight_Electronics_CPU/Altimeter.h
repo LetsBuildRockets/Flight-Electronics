@@ -5,15 +5,16 @@
  *      Author: erics
  */
 
+
+#ifndef ALTIMETER_H_
+#define ALTIMETER_H_
+
 #include <Arduino.h>
 #include <Wire.h>
 #include <FastCRC.h>
 
 #include "Config.h"
 #include "Telemetry.h"
-
-#ifndef ALTIMETER_H_
-#define ALTIMETER_H_
 
 namespace Altimeter
 {

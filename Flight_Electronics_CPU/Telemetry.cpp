@@ -22,6 +22,7 @@ void Telemetry::sendMSG(TELEMETRY_MSG_TYPE messageType, std::vector<uint8_t> buf
 	_buffer[bufferLength - 1] = '\0';
 	TELEMETRYSERIAL.flush();
 	TELEMETRYSERIAL.write(_buffer, buffersize);
+	Logger::log((const char*)_buffer, buffersize);
 #if DEBUG
 	char __buffer[buffersize + 20];
 	strcpy(__buffer, "Telemetry msg: ");
