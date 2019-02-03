@@ -5,19 +5,20 @@
  *      Author: erics
  */
 
-#include <Arduino.h>
-
-#include "Config.h"
 
 #ifndef ANALOG_H_
 #define ANALOG_H_
+
+#include <Arduino.h>
+
+#include "Config.h"
 
 namespace Analog
 {
 	namespace
 	{
-		double analogVoltage[NUMBER_OF_ANALOG_PINS] = { 0 };
-		double analogScaled[NUMBER_OF_ANALOG_PINS] = { 0 };
+		volatile double analogVoltage[NUMBER_OF_ANALOG_PINS] = { 0 };
+		volatile double analogScaled[NUMBER_OF_ANALOG_PINS] = { 0 };
 	}
 	void init();
 	double getScaledData(int ChannelNumber);

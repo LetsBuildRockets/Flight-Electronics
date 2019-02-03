@@ -40,11 +40,12 @@ void setup()
 	// TODO: sequencer
 	// TODO: Flight Calculator
 	// TODO: read from altimeter, filter data, differentiate
-	// TODO: SD card buffering
+	// TODO: SD card buffering, and decrease timeout
 	// TODO: shift out for digital
 	// TODO: AX-12A Servo
 	// TODO: GPS
 	// TODO: APRS
+
 	Scheduler::addTask(HIGH_PRIORITY, Analog::updateData, 50000ul, 0, "Update Analog Data");
 	Scheduler::addTask(LOW_PRIORITY, ([]() { digitalWriteFast(PIN_LED, !(digitalReadFast(PIN_LED))); }), 500000ul, 0, "Blink");
 	Scheduler::addTask(LOW_PRIORITY, getIMUData, 100000, 0, "IMU update");

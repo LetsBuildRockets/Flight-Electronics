@@ -35,7 +35,6 @@ void Altimeter::init()
 		return;
 	}
 
-
 	send16BitWord(0x805D); // soft reset
 	if(!updateOPT()) Telemetry::printf(MSG_ERROR, "Unable to get Altimeter OPT params!\n");
 }
