@@ -19,8 +19,10 @@
 typedef void (*ISR)();
 enum TASK_PRIORITY
 {
-	LOW_PRIORITY,
-	HIGH_PRIORITY
+	HIGH_PRIORITY_253 = 0,
+	HIGH_PRIORITY_254 = 1,
+	HIGH_PRIORITY_255 = 2,
+	LOW_PRIORITY
 };
 
 struct Task
@@ -29,6 +31,7 @@ struct Task
 	uint32_t lastExecuteTime; // in microseconds
 	uint32_t interval; // in microseconds
 	String name;
+	TASK_PRIORITY priority;
 };
 
 namespace Scheduler
@@ -37,21 +40,24 @@ namespace Scheduler
 	{
 		std::queue<Task> taskList_LOW_PRIORITY;
 		std::queue<Task> taskList_HIGH_PRIORITY;
-		volatile uint8_t highPriortyTaskListSize = 0;
-		volatile ISR highPriortyTasks_fast[50];
-		volatile int32_t highPriortyInvertvals_fast [50];
-		volatile int32_t highPriortyLastExec_fast [50];
-		volatile uint8_t highPriortytaskIndex_fast = 0;
+		volatile uint8_t highPriorty_fast_taskListSize[3] = {0};
+		volatile ISR highPriorty_fast_ISRs [3][10];
+		volatile int32_t highPriorty_fast_intervals [3][10];
+		volatile int32_t highPriorty_fast_lastExec [3][10];
+		volatile uint8_t highPriorty_fast_index [3] = {0};
 
 		double averageJitter = 0;
-		IntervalTimer hwTimer;
-		bool hwTimerRunning = false;
+		IntervalTimer hwTimer[3];
+		bool hwTimerRunning[3] = {false};
 	}
 	void addTask(TASK_PRIORITY taskPriortiy, ISR fun_ptr, uint32_t interval);
 	void addTask(TASK_PRIORITY taskPriortiy, ISR fun_ptr, uint32_t interval, uint32_t delay, String name);
 	void init();
 	void tickSoft();
-	void tickHard();
+	void tickHard(uint8_t listnum);
+	void tickHard_255();
+	void tickHard_254();
+	void tickHard_253();
 	void startHwTimer();
 	double getAverageJitter();
 	int getQueueSize();
