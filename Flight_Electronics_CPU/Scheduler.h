@@ -19,9 +19,9 @@
 typedef void (*ISR)();
 enum TASK_PRIORITY
 {
-	HIGH_PRIORITY_253 = 0,
-	HIGH_PRIORITY_254 = 1,
-	HIGH_PRIORITY_255 = 2,
+	HIGHEST_PRIORITY = 0,
+	HIGHER_PRIORITY = 1,
+	HIGH_PRIORITY = 2,
 	LOW_PRIORITY
 };
 
@@ -60,7 +60,7 @@ namespace Scheduler
 	void tickHard_253();
 	void startHwTimer();
 	double getAverageJitter();
-	int getQueueSize();
+	int getLowPriorityQueueSize();
 };
 
 #endif /* SOFTSCHEDULER_H_ */

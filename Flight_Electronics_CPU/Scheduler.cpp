@@ -41,40 +41,32 @@ void Scheduler::startHwTimer()
 
 		highPriorty_fast_intervals[currentTask.priority][highPriorty_fast_taskListSize[currentTask.priority]] = currentTask.interval;
 		highPriorty_fast_ISRs[currentTask.priority][highPriorty_fast_taskListSize[currentTask.priority]] = currentTask.fun_ptr;
-		DEBUGSERIAL.printf("addr of func at start: %x\t", highPriorty_fast_ISRs[currentTask.priority][highPriorty_fast_taskListSize[currentTask.priority]]);
 		highPriorty_fast_lastExec[currentTask.priority][highPriorty_fast_taskListSize[currentTask.priority]] = 0;
 		highPriorty_fast_taskListSize[currentTask.priority]++;
 
-		DEBUGSERIAL.printf("Name: %s, priortity %d\n", currentTask.name.c_str(), currentTask.priority);
+		//DEBUGSERIAL.printf("addr of func at start: %x\t", highPriorty_fast_ISRs[currentTask.priority][highPriorty_fast_taskListSize[currentTask.priority]]);
+		//DEBUGSERIAL.printf("Name: %s, priortity %d\n", currentTask.name.c_str(), currentTask.priority);
 
 	}
 
-	for (int i  = 0; i < 3; i++)
+	if(!hwTimerRunning[HIGHEST_PRIORITY] && highPriorty_fast_taskListSize[HIGHEST_PRIORITY] > 0)
 	{
-		for(int j = 0; j < highPriorty_fast_taskListSize[i]; j++)
-		{
-			DEBUGSERIAL.printf("priortity %d, funcp: %x\n", i, highPriorty_fast_ISRs[i][j]);
-		}
-	};
-
-	if(!hwTimerRunning[HIGH_PRIORITY_253] && highPriorty_fast_taskListSize[HIGH_PRIORITY_253] > 0)
-	{
-		hwTimer[HIGH_PRIORITY_253].priority(253);
-		hwTimer[HIGH_PRIORITY_253].begin(tickHard_253, 100);
-		hwTimerRunning[HIGH_PRIORITY_253] = true;
+		hwTimer[HIGHEST_PRIORITY].priority(100);
+		hwTimer[HIGHEST_PRIORITY].begin(tickHard_253, 100);
+		hwTimerRunning[HIGHEST_PRIORITY] = true;
 	}
-	if(!hwTimerRunning[HIGH_PRIORITY_254] && highPriorty_fast_taskListSize[HIGH_PRIORITY_254] > 0)
+	if(!hwTimerRunning[HIGHER_PRIORITY] && highPriorty_fast_taskListSize[HIGHER_PRIORITY] > 0)
 	{
-		hwTimer[HIGH_PRIORITY_254].priority(254);
-		hwTimer[HIGH_PRIORITY_254].begin(tickHard_254, 100);
-		hwTimerRunning[HIGH_PRIORITY_254] = true;
+		hwTimer[HIGHER_PRIORITY].priority(200);
+		hwTimer[HIGHER_PRIORITY].begin(tickHard_254, 100);
+		hwTimerRunning[HIGHER_PRIORITY] = true;
 	}
 
-	if(!hwTimerRunning[HIGH_PRIORITY_255] && highPriorty_fast_taskListSize[HIGH_PRIORITY_255] > 0)
+	if(!hwTimerRunning[HIGH_PRIORITY] && highPriorty_fast_taskListSize[HIGH_PRIORITY] > 0)
 	{
-		hwTimer[HIGH_PRIORITY_255].priority(255);
-		hwTimer[HIGH_PRIORITY_255].begin(tickHard_255, 100);
-		hwTimerRunning[HIGH_PRIORITY_255] = true;
+		hwTimer[HIGH_PRIORITY].priority(255);
+		hwTimer[HIGH_PRIORITY].begin(tickHard_255, 100);
+		hwTimerRunning[HIGH_PRIORITY] = true;
 	}
 }
 
@@ -101,7 +93,7 @@ void Scheduler::addTask(TASK_PRIORITY taskPriortiy, ISR fun_ptr, uint32_t interv
 			Telemetry::printf(MSG_WARNING, "The lOW_PRIORITY scheduler queue is more than 50 deep!");
 		}
 	}
-	else if(taskPriortiy == HIGH_PRIORITY_255 || taskPriortiy == HIGH_PRIORITY_254 || taskPriortiy == HIGH_PRIORITY_253)
+	else if(taskPriortiy == HIGH_PRIORITY || taskPriortiy == HIGHER_PRIORITY || taskPriortiy == HIGHEST_PRIORITY)
 	{
 		if(!hwTimerRunning[taskPriortiy])
 		{
@@ -134,7 +126,7 @@ void Scheduler::tickSoft()
 			uint32_t elapsed = currentTime - currentTask.lastExecuteTime;
 			if(elapsed > currentTask.interval)
 			{
-				DEBUGSERIAL.printf("Name: %s, elapsed: %lu\n", currentTask.name.c_str(), elapsed);
+				//DEBUGSERIAL.printf("Name: %s, elapsed: %lu\n", currentTask.name.c_str(), elapsed);
 				uint16_t jitter = elapsed-currentTask.interval;
 				if(jitter >= 10000) Telemetry::printf(MSG_WARNING, "jitter for this scheduled task [%s] was %ld us!\n", currentTask.name.c_str(), jitter);
 				if(averageJitter >= 1000) Telemetry::printf(MSG_WARNING, "average schedule jitter is %0.2f us!\n", averageJitter);
@@ -149,13 +141,13 @@ void Scheduler::tickSoft()
 }
 
 void Scheduler::tickHard_255() {
-	tickHard(HIGH_PRIORITY_255);
+	tickHard(HIGH_PRIORITY);
 }
 void Scheduler::tickHard_254() {
-	tickHard(HIGH_PRIORITY_254);
+	tickHard(HIGHER_PRIORITY);
 }
 void Scheduler::tickHard_253() {
-	tickHard(HIGH_PRIORITY_253);
+	tickHard(HIGHEST_PRIORITY);
 }
 
 void Scheduler::tickHard(uint8_t listIndex)
@@ -171,14 +163,10 @@ void Scheduler::tickHard(uint8_t listIndex)
 		uint32_t elapsed = currentTime - lastExecuteTime;
 		if(elapsed > interval)
 		{
-			//uint16_t jitter = elapsed-interval;
-			//if(jitter >= 10000) Telemetry::printf(MSG_WARNING, "jitter for this scheduled task [%s] was %ld ms!\n", currentTask.name.c_str(), jitter);
-			//if(averageJitter >= 1000) Telemetry::printf(MSG_WARNING, "average schedule jitter is %0.2f us!\n", averageJitter);
 			highPriorty_fast_lastExec[listIndex][highPriorty_fast_index[listIndex]] = currentTime;
-			DEBUGSERIAL.printf("running: %x at priortiylevel: %d\n", fun_ptr, listIndex);
-			DEBUGSERIAL.flush();
+			//DEBUGSERIAL.printf("running: %x at priortiylevel: %d\n", fun_ptr, listIndex);
+			//DEBUGSERIAL.flush();
 			__enable_irq();
-			//averageJitter = approxRollingAverage(averageJitter, jitter);
 
 			fun_ptr();
 			//DEBUGSERIAL.printf("addr of func in isr: %x, index is: %d\n", fun_ptr,highPriorty_fast_index);
@@ -195,7 +183,7 @@ double Scheduler::getAverageJitter()
 	return averageJitter;
 }
 
-int Scheduler::getQueueSize()
+int Scheduler::getLowPriorityQueueSize()
 {
 	return taskList_LOW_PRIORITY.size();
 }

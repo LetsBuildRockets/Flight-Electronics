@@ -47,22 +47,21 @@ void setup()
 	// TODO: GPS
 	// TODO: APRS
 
-	Scheduler::addTask(HIGH_PRIORITY_255, Analog::updateData, 500000lu, 0, "Update Analog Data");
-	Scheduler::addTask(HIGH_PRIORITY_254, ([]() { digitalWriteFast(PIN_LED, !(digitalReadFast(PIN_LED))); }), 500000lu, 0, "Blink");
-	Scheduler::addTask(HIGH_PRIORITY_253, ([]() { digitalWriteFast(PIN_LED, !(digitalReadFast(PIN_LED))); }), 1000000lu, 0, "Blink");
+	Scheduler::addTask(HIGH_PRIORITY, Analog::updateData, 500000lu, 0, "Update Analog Data");
+	//Scheduler::addTask(HIGHEST_PRIORITY, ([]() { digitalWriteFast(PIN_LED, !(digitalReadFast(PIN_LED))); }), 1000000lu, 0, "Blink");
 	Scheduler::addTask(LOW_PRIORITY, getIMUData, 100000lu, 0, "IMU update");
+	Scheduler::addTask(LOW_PRIORITY, ([]() { digitalWriteFast(PIN_LED, !(digitalReadFast(PIN_LED))); }), 500000lu, 0, "Blink");
 	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "IMU Calibration: %s\n", IMU::getCalibration().c_str()); }), 5000000lu, 0, "IMU print calibration info");
 	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "average Jitter: %.2f us\n", Scheduler::getAverageJitter()); }), 5000000lu, 0, "print average jitter");
 	Scheduler::addTask(LOW_PRIORITY, checkBatteryStatus, 10000000lu, 0, "Check Battery State");
-	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "Free mem: %lu kB\n", FreeMem()/1000); }), 5000000lu, 0, "mem ussage");
+	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "Free mem: %lu kB\n", FreeMem()/1000); }), 5000000lu, 0, "mem usage");
 
 
-	// THIS BREAKS THE CODE!!!!
-	// SHOULDN'T Interrupts of level 254 and 253 interrupt it?????
-	Scheduler::addTask(HIGH_PRIORITY_255, ([]() { DEBUGSERIAL.printf("hanging now...\n"); DEBUGSERIAL.printf("boop elapsed: %lu, timenow:%lu\n", micros()-sss, micros()); __enable_irq(); while(1);}), 10000000ul, 0, "HANG");
-
-
-	sss = micros();
+	// EXAMPLE... dont actually use this for anything....
+	// This will hang the low high and higher priority threads, but shows that the highest priority still runs.
+	// Scheduler::addTask(LOW_PRIORITY, ([]() { DEBUGSERIAL.printf("hanging LOW priority now...\n"); DEBUGSERIAL.printf("boop elapsed: %lu, timenow:%lu\n", micros()-sss, micros()); while(1);}), 10000000ul, 0, "HANG_LOW");
+	// Scheduler::addTask(HIGH_PRIORITY, ([]() { DEBUGSERIAL.printf("hanging HIGH priority now...\n"); DEBUGSERIAL.printf("boop elapsed: %lu, timenow:%lu\n", micros()-sss, micros()); while(1);}), 20000000ul, 0, "HANG_HIGH");
+	// Scheduler::addTask(HIGHER_PRIORITY, ([]() { DEBUGSERIAL.printf("hanging HIGHER priority now...\n"); DEBUGSERIAL.printf("boop elapsed: %lu, timenow:%lu\n", micros()-sss, micros()); while(1);}), 30000000ul, 0, "HANG_HIGHER");
 
 	Scheduler::startHwTimer();
 
