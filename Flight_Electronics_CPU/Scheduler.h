@@ -11,6 +11,7 @@
 #include <Arduino.h>
 #include <queue>
 #include <IntervalTimer.h>
+#include <stdint.h>
 
 #include "Config.h"
 #include "Telemetry.h"

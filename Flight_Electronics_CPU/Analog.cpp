@@ -9,33 +9,33 @@
 
 void Analog::init()
 {
-	// TODO: do we need to init anything? Maybe switch to 16bit adc mode?
+	analogReadResolution(ADC_RESOLUTION);
+	analogReadAveraging(ADC_AVERAGING_COUNT);
 }
 void Analog::updateData()
 {
 	for (int i = 0; i < NUMBER_OF_ANALOG_PINS; ++i)
 	{
-		double newVoltage = analogRead(i) * 3.3/1024.0;
+		float newValue = analogRead(i);
 		__disable_irq();
-		analogVoltage[i] = newVoltage;
-		analogScaled[i] = ANALOG_TRANSFER_FUNCTIONS[i](analogVoltage[i]);
+		analogADCValue[i] = newValue;
 		__enable_irq();
 	}
 
 }
 
-double Analog::getVoltage(int ChannelNumber)
+float Analog::getVoltage(uint8_t channelNumber)
 {
 	__disable_irq();
-	double _analogVoltage=analogVoltage[ChannelNumber];
+	float _analogVoltage=analogADCValue[channelNumber]  * 3.3/ADC_RANGE;
 	__enable_irq();
 	return _analogVoltage;
 }
 
-double Analog::getScaledData(int ChannelNumber)
+float Analog::getScaledData(uint8_t channelNumber)
 {
 	__disable_irq();
-	double _analogScaled=analogScaled[ChannelNumber];
+	float _analogScaled = ANALOG_TRANSFER_FUNCTIONS[channelNumber](analogADCValue[channelNumber]  * 3.3/ADC_RANGE);
 	__enable_irq();
 	return _analogScaled;
 }
