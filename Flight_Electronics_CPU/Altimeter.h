@@ -16,10 +16,10 @@
 #include "Config.h"
 #include "Telemetry.h"
 
-#define ALTIMITER_MODE_LOW_POWER 0x401A
-#define ALTIMETER_MODE_NORMAL 0x48A3
-#define ALTIMETER_MODE_LOW_NOISE 0x5059
-#define ALTIMETER_MODE_ULTRA_LOW_NOISE 0x58E0
+#define ALTIMITER_MODE_LOW_POWER 0x401A // up to ~300Hz ?
+#define ALTIMETER_MODE_NORMAL 0x48A3 // up to 140Hz ?
+#define ALTIMETER_MODE_LOW_NOISE 0x5059 // up to ~40Hz ?
+#define ALTIMETER_MODE_ULTRA_LOW_NOISE 0x58E0 // up to 10Hz ?
 
 
 #define p_Pa_calib_0 45000.0
@@ -35,13 +35,30 @@
 #define CONST_G 9.80665 // m/s2
 #define CONST_R 8.3144598 // J/mol/K
 
+
+// TODO: We need to determine this and actual coefficients. for good performance. for now i will leave the following as a place holder...
+#define ALTITUDE_FILTER_TAP_NUM 9
+static float ALTITUDE_FILTER_TAPS[ALTITUDE_FILTER_TAP_NUM] = {
+  -0.034640280536991565,
+  -0.06403675618096012,
+  0.05175991343322914,
+  0.3165201526922483,
+  0.46622041259025365,
+  0.3165201526922483,
+  0.05175991343322914,
+  -0.06403675618096012,
+  -0.034640280536991565
+};
+
 namespace Altimeter
 {
 	namespace
 	{
+		float altitudeFilterRingBuffer[ALTITUDE_FILTER_TAP_NUM];
+		int8_t altitudeFilterRingBufferIndex=0;
 		uint32_t p_dout;
 		uint16_t t_dout;
-		float pressurePa;
+		float pressure;
 		float velocity;
 		float temperatureC;
 		uint16_t cn[4] = {0};
