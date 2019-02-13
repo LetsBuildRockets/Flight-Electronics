@@ -40,7 +40,7 @@ void setup()
 
 	// TODO: sequencer
 	// TODO: Flight Calculator
-	// TODO: read from altimeter, filter data, differentiate
+	// TODO: read from altimeter, filter data, differentiate <-- need to test this....
 	// TODO: SD card buffering, and decrease timeout
 	// TODO: shift out for digital
 	// TODO: AX-12A Servo
