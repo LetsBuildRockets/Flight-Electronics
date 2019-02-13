@@ -41,15 +41,18 @@ namespace Altimeter
 	{
 		uint32_t p_dout;
 		uint16_t t_dout;
-		float pressure;
-		float velocity;;
-		float temperature;
+		float pressurePa;
+		float velocity;
+		float temperatureC;
 		uint16_t cn[4] = {0};
 		FastCRC8 CRC8;
 	}
 	void init();
 	float getVelocity();
 	float getAlittude();
+	float getTempK();
+	float getTempC();
+	float getTempF();
 	uint8_t send8BitWord(uint8_t word);
 	uint8_t send8BitWordWithCRC(uint8_t word, uint8_t crc);
 	uint8_t send8BitWordWithCRC(uint8_t word);
