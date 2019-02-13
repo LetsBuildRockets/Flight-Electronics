@@ -16,7 +16,6 @@
 #include "Config.h"
 #include "Telemetry.h"
 
-#define PIT_id 0 // which timer do we want to use. If you change this you also must change the ISR in Scheduler.cpp
 typedef void (*ISR)();
 enum TASK_PRIORITY
 {
