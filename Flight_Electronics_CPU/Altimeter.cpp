@@ -68,6 +68,17 @@ float Altimeter::getAlittude()
 	return altitudeResult;
 }
 
+float Altimeter::getVelocity()
+{
+	float velocityResult = 0;
+	for(int i=0; i<VELOCITY_FILTER_TAP_NUM; i++)
+	{
+		uint8_t ringIndex=(i+velocityFilterRingBufferIndex)%VELOCITY_FILTER_TAP_NUM;
+		velocityResult+=VELOCITY_FILTER_TAPS[i]*velocityFilterRingBuffer[ringIndex];
+	}
+	return velocityResult;
+}
+
 void Altimeter::getNewSample()
 {
 	if(send16BitWord(ALTIMITER_MODE_LOW_POWER)) return; // checking for ACK at end of transmission
@@ -126,6 +137,15 @@ void Altimeter::getNewSample()
 				const float Tb=216.65;
 				const float Ps=5474.89;
 				newAlt = Tb/(L*expf( logf(pressure/Ps) / ((CONST_G*CONST_M)/(CONST_R*L))))-Tb/L+H;
+			}
+			float lastAltitude = altitudeFilterRingBuffer[altitudeFilterRingBufferIndex];
+			uint32_t newTime = micros();
+			uint32_t diff = newTime-lastSampleTime;
+			if(diff!=0)
+			{
+				velocityFilterRingBufferIndex++;
+				if(velocityFilterRingBufferIndex>=VELOCITY_FILTER_TAP_NUM) velocityFilterRingBufferIndex = 0;
+				velocityFilterRingBuffer[velocityFilterRingBufferIndex] = (newAlt-lastAltitude)/(float)(diff);
 			}
 			altitudeFilterRingBufferIndex++;
 			if(altitudeFilterRingBufferIndex>=ALTITUDE_FILTER_TAP_NUM) altitudeFilterRingBufferIndex = 0;
