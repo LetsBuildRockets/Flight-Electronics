@@ -79,6 +79,7 @@ namespace Altimeter
 {
 	namespace
 	{
+		// TODO: Make this stuff ISR safe
 		float altitudeFilterRingBuffer[ALTITUDE_FILTER_TAP_NUM];
 		int8_t altitudeFilterRingBufferIndex=0;
 		float velocityFilterRingBuffer[VELOCITY_FILTER_TAP_NUM];
