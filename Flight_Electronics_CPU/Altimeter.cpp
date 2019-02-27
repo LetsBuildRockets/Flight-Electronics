@@ -21,7 +21,7 @@ void Altimeter::init()
 	send16BitWord(0xEFC8); // ask for part number
 	uint8_t buf[2] = {0};
 	readBytes(buf, 2);
-	if(buf[1]&0b1000)
+	if((buf[1]&0b1000)||true)
 	{
 		uint8_t partNumber = buf[1] & 0b11111; // we don't need the msb... ((buf[0] << 8) | buf[1]) & 0b11111;
 
@@ -36,6 +36,7 @@ void Altimeter::init()
 	}
 
 	send16BitWord(0x805D); // soft reset
+	delay(1);
 	if(!updateOPT()) Telemetry::printf(MSG_ERROR, "Unable to get Altimeter OPT params!\n");
 }
 
@@ -81,78 +82,95 @@ float Altimeter::getVelocity()
 
 void Altimeter::getNewSample()
 {
-	if(send16BitWord(ALTIMITER_MODE_LOW_POWER)) return; // checking for ACK at end of transmission
-	for(int i=0; i<10; i++) {
-		//try to read from altimeter
-		delayMicroseconds(100);
-		uint8_t buf[6] = {0};
-		if(readBytes(buf, 2) && readBytes(buf+2, 4))
+	send16BitWord(ALTIMITER_MODE_LOW_POWER);
+	uint8_t buf[6] = {0};
+
+	bool sampleIsReady = false;
+	for(int i=0; i<10; i++){
+		if(Wire.requestFrom((unsigned char)ALTIMETER_ADDRESS, (unsigned char)(9)) > 0)
 		{
-			uint8_t T_MSB = buf[0];
-			uint8_t T_LSB = buf[1];
-			uint8_t P_MMSB = buf[2+0];
-			uint8_t P_MLSB = buf[2+1];
-			uint8_t P_LMSB = buf[2+2];
-			// uint8_t P_LLSB = buf[2+3]; we dont use this byte..., cause we dont need it!
-			p_dout = P_MMSB << 16 | P_MLSB << 8 | P_LMSB;
-			t_dout = T_MSB << 8 | T_LSB;
-
-			float t = (float)(t_dout - 32768);
-			float s1 = LUT_lower + (float)(cn[0] * t * t) * quadr_factor;
-			float s2 = offst_factor * cn[3] + (float)(cn[1] * t * t) * quadr_factor;
-			float s3 = LUT_upper + (float)(cn[2] * t * t) * quadr_factor;
-			float C = (s1 * s2 * (p_Pa_calib_0 - p_Pa_calib_1) + s2 * s3 * (p_Pa_calib_1 - p_Pa_calib_2) +
-			s3 * s1 * (p_Pa_calib_2 - p_Pa_calib_0)) /
-			(s3 * (p_Pa_calib_0 - p_Pa_calib_1) +
-			s1 * (p_Pa_calib_1 - p_Pa_calib_2) +
-			s2 * (p_Pa_calib_2 - p_Pa_calib_0));
-			float A = (p_Pa_calib_0 * s1 - p_Pa_calib_1 * s2 - (p_Pa_calib_1 - p_Pa_calib_0) * C) / (s1 - s2);
-			float B = (p_Pa_calib_0 - A) * (s1 + C);
-
-			pressure = A + B/(C+p_dout);
-			temperatureC = -45 + 175.0/(float)(1<<16) * t_dout;
-
-			// Note, this function is the inverse of the Barometric Formula
-			// See https://en.wikipedia.org/wiki/Barometric_formula for definition
-			// also see scripts/altitudecalc.m for a MATLAB script to test this function
-			float newAlt;
-			if (pressure > 22632.0)
-			{
-				const float L=-0.0065;
-				const float Tb=288.15;
-				const float Ps=101325.00;
-				newAlt = Tb/(L*expf( logf(pressure/Ps) / ((CONST_G*CONST_M)/(CONST_R*L))))-Tb/L;
-			}
-			else if(pressure > 5474.90)
-			{
-				const float H=11000;
-				const float Tb=216.65;
-				const float Ps=22632.10;
-				newAlt = -Tb*CONST_R*logf(pressure/Ps)/(CONST_G*CONST_M)+H;
-			}
-			else
-			{
-				const float  H=20000;
-				const float L=0.001;
-				const float Tb=216.65;
-				const float Ps=5474.89;
-				newAlt = Tb/(L*expf( logf(pressure/Ps) / ((CONST_G*CONST_M)/(CONST_R*L))))-Tb/L+H;
-			}
-			float lastAltitude = altitudeFilterRingBuffer[altitudeFilterRingBufferIndex];
-			uint32_t newTime = micros();
-			uint32_t diff = newTime-lastSampleTime;
-			if(diff!=0)
-			{
-				velocityFilterRingBufferIndex++;
-				if(velocityFilterRingBufferIndex>=VELOCITY_FILTER_TAP_NUM) velocityFilterRingBufferIndex = 0;
-				velocityFilterRingBuffer[velocityFilterRingBufferIndex] = (newAlt-lastAltitude)/(float)(diff);
-			}
-			altitudeFilterRingBufferIndex++;
-			if(altitudeFilterRingBufferIndex>=ALTITUDE_FILTER_TAP_NUM) altitudeFilterRingBufferIndex = 0;
-			altitudeFilterRingBuffer[altitudeFilterRingBufferIndex] = newAlt;
+			sampleIsReady = true;
+			break;
+		}
+		delayMicroseconds(100);
+	}
+	if(!sampleIsReady)
+	{
+		Telemetry::printf(MSG_WARNING, "Altimeter Sample Timeout!\n");
+	}
+	for(int i=0; i<3; i++)
+	{
+		buf[0+i*2] = Wire.read();
+		buf[1+i*2] = Wire.read();
+		if(generateCRC8(buf+i*2, 2) != Wire.read())
+		{
+			Telemetry::printf(MSG_ERROR, "Altimeter CRC ERROR!\n");
 		}
 	}
 
+	uint8_t P_MMSB = buf[0];
+	uint8_t P_MLSB = buf[1];
+	uint8_t P_LMSB = buf[2];
+	uint8_t T_MSB = buf[4];
+	uint8_t T_LSB = buf[5];
+	// uint8_t P_LLSB = buf[2+3]; we dont use this byte..., cause we dont need it!
+	p_dout = P_MMSB << 16 | P_MLSB << 8 | P_LMSB;
+	t_dout = T_MSB << 8 | T_LSB;
+
+	float t = (float)(t_dout - 32768);
+	float s1 = LUT_lower + (float)(cn[0] * t * t) * quadr_factor;
+	float s2 = offst_factor * cn[3] + (float)(cn[1] * t * t) * quadr_factor;
+	float s3 = LUT_upper + (float)(cn[2] * t * t) * quadr_factor;
+	float C = (s1 * s2 * (p_Pa_calib_0 - p_Pa_calib_1) + s2 * s3 * (p_Pa_calib_1 - p_Pa_calib_2) +
+	s3 * s1 * (p_Pa_calib_2 - p_Pa_calib_0)) /
+	(s3 * (p_Pa_calib_0 - p_Pa_calib_1) +
+	s1 * (p_Pa_calib_1 - p_Pa_calib_2) +
+	s2 * (p_Pa_calib_2 - p_Pa_calib_0));
+	float A = (p_Pa_calib_0 * s1 - p_Pa_calib_1 * s2 - (p_Pa_calib_1 - p_Pa_calib_0) * C) / (s1 - s2);
+	float B = (p_Pa_calib_0 - A) * (s1 + C);
+
+	pressure = A + B/(C+p_dout);
+	temperatureC = -45 + 175.0/(float)(1<<16) * t_dout;
+
+
+	// Note, this function is the inverse of the Barometric Formula
+	// See https://en.wikipedia.org/wiki/Barometric_formula for definition
+	// also see scripts/altitudecalc.m for a MATLAB script to test this function
+	float newAlt;
+	if (pressure > 22632.0)
+	{
+		const float L=-0.0065;
+		const float Tb=288.15;
+		const float Ps=101325.00;
+		newAlt = Tb/(L*expf( logf(pressure/Ps) / ((CONST_G*CONST_M)/(CONST_R*L))))-Tb/L;
+	}
+	else if(pressure > 5474.90)
+	{
+		const float H=11000;
+		const float Tb=216.65;
+		const float Ps=22632.10;
+		newAlt = -Tb*CONST_R*logf(pressure/Ps)/(CONST_G*CONST_M)+H;
+	}
+	else
+	{
+		const float  H=20000;
+		const float L=0.001;
+		const float Tb=216.65;
+		const float Ps=5474.89;
+		newAlt = Tb/(L*expf( logf(pressure/Ps) / ((CONST_G*CONST_M)/(CONST_R*L))))-Tb/L+H;
+	}
+	float lastAltitude = altitudeFilterRingBuffer[altitudeFilterRingBufferIndex];
+	uint32_t newTime = micros();
+	uint32_t diff = newTime-lastSampleTime;
+	if(diff!=0)
+	{
+		velocityFilterRingBufferIndex++;
+		if(velocityFilterRingBufferIndex>=VELOCITY_FILTER_TAP_NUM) velocityFilterRingBufferIndex = 0;
+		velocityFilterRingBuffer[velocityFilterRingBufferIndex] = (newAlt-lastAltitude)/(float)(diff);
+	}
+	altitudeFilterRingBufferIndex++;
+	if(altitudeFilterRingBufferIndex>=ALTITUDE_FILTER_TAP_NUM) altitudeFilterRingBufferIndex = 0;
+	altitudeFilterRingBuffer[altitudeFilterRingBufferIndex] = newAlt;
 }
 
 float Altimeter::getTempC()
@@ -174,7 +192,9 @@ uint8_t Altimeter::send8BitWord(uint8_t word)
 {
 	Wire.beginTransmission(ALTIMETER_ADDRESS);
 	Wire.send(word & 0xFF);
-	return Wire.endTransmission();
+	uint8_t err = Wire.endTransmission();
+	if(err) Telemetry::printf(MSG_ERROR, "Altimeter i2c err: %x, I sent: 0x%x\n", err, word);
+	return err;
 }
 
 uint8_t Altimeter::send8BitWordWithCRC(uint8_t word, uint8_t crc)
@@ -182,7 +202,9 @@ uint8_t Altimeter::send8BitWordWithCRC(uint8_t word, uint8_t crc)
 	Wire.beginTransmission(ALTIMETER_ADDRESS);
 	Wire.send(word & 0xFF);
 	Wire.send(crc);
-	return Wire.endTransmission();
+	uint8_t err = Wire.endTransmission();
+	if(err) Telemetry::printf(MSG_ERROR, "Altimeter i2c err: %x, I sent: 0x%x\n", err, word);
+	return err;
 }
 
 
@@ -198,7 +220,9 @@ uint8_t Altimeter::send16BitWord(uint16_t word)
 	Wire.beginTransmission(ALTIMETER_ADDRESS);
 	Wire.send((word >> 8) & 0xFF);
 	Wire.send(word & 0xFF);
-	return Wire.endTransmission();
+	uint8_t err = Wire.endTransmission();
+	if(err) Telemetry::printf(MSG_ERROR, "Altimeter i2c err: %x, I sent: 0x%x\n", err, word);
+	return err;
 }
 
 uint8_t Altimeter::send16BitWordWithCRC(uint16_t word, uint8_t crc)
@@ -207,7 +231,9 @@ uint8_t Altimeter::send16BitWordWithCRC(uint16_t word, uint8_t crc)
 	Wire.send((word >> 8) & 0xFF);
 	Wire.send(word & 0xFF);
 	Wire.send(crc);
-	return Wire.endTransmission();
+	uint8_t err = Wire.endTransmission();
+	if(err) Telemetry::printf(MSG_ERROR, "Altimeter i2c err: %x, I sent: 0x%x\n", err, word);
+	return err;
 }
 
 
@@ -220,14 +246,16 @@ uint8_t Altimeter::send16BitWordWithCRC(uint16_t word)
 
 bool Altimeter::readBytes(uint8_t* buf, uint8_t len)
 {
-	Wire.requestFrom((unsigned char)ALTIMETER_ADDRESS, (unsigned char)len);
+	Wire.requestFrom((unsigned char)ALTIMETER_ADDRESS, (unsigned char)(len+1));
 	if(Wire.available() >= len+1)
 	{
 		for(int i=0; i<len; i++)
 		{
 			buf[i] = Wire.read();
+			//Telemetry::printfNOLOG(MSG_INFO, "rec b%u: %x ",i, buf[i]);
 		}
 		uint8_t crc = Wire.read();
+		//Telemetry::printfNOLOG(MSG_INFO, "rec crc: %x ", crc);
 		if(generateCRC8(buf, len) != crc)
 		{
 			Telemetry::printf(MSG_ERROR, "Altimeter CRC ERROR!\n");
