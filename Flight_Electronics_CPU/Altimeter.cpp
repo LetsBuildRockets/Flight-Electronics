@@ -21,7 +21,7 @@ void Altimeter::init()
 	send16BitWord(0xEFC8); // ask for part number
 	uint8_t buf[2] = {0};
 	readBytes(buf, 2);
-	if((buf[1]&0b1000)||true)
+	if((buf[1]&0b1000))
 	{
 		uint8_t partNumber = buf[1] & 0b11111; // we don't need the msb... ((buf[0] << 8) | buf[1]) & 0b11111;
 
@@ -38,6 +38,7 @@ void Altimeter::init()
 	send16BitWord(0x805D); // soft reset
 	delay(1);
 	if(!updateOPT()) Telemetry::printf(MSG_ERROR, "Unable to get Altimeter OPT params!\n");
+	send16BitWord(0x805D); // soft reset
 }
 
 bool Altimeter::updateOPT()
@@ -86,26 +87,28 @@ void Altimeter::getNewSample()
 	send16BitWord(ALTIMITER_MODE_LOW_POWER);
 	uint8_t buf[6] = {0};
 
+	delayMicroseconds(5);
 	bool sampleIsReady = false;
-	for(int i=0; i<10; i++){
-		if(Wire.requestFrom((unsigned char)ALTIMETER_ADDRESS, (unsigned char)(9)) > 0)
-		{
-			sampleIsReady = true;
-			break;
-		}
-		delayMicroseconds(100);
+	for(int i=0; i<10 && !sampleIsReady; i++){
+		uint8_t len = Wire.requestFrom((unsigned char)ALTIMETER_ADDRESS, 9u);
+		DEBUGSERIAL.printf("len: %u\n", len);
+		if(len > 0) sampleIsReady = true;
 	}
 	if(!sampleIsReady)
 	{
 		Telemetry::printf(MSG_WARNING, "Altimeter Sample Timeout!\n");
+		return;
 	}
 	for(int i=0; i<3; i++)
 	{
-		buf[0+i*2] = Wire.read();
-		buf[1+i*2] = Wire.read();
-		if(generateCRC8(buf+i*2, 2) != Wire.read())
+		//buf[0+i*2] = Wire.read();
+		//buf[1+i*2] = Wire.read();
+		Telemetry::printf(MSG_ERROR, "new samp byte %i: 0x%02X, byte %i: 0x%2X",i*2,Wire.read(),1+i*2,Wire.read());
+		uint8_t newcrc = Wire.read();
+		uint8_t expcrc = generateCRC8(buf+i*2, 2);
+		if(expcrc != newcrc)
 		{
-			Telemetry::printf(MSG_ERROR, "Altimeter CRC ERROR!\n");
+			Telemetry::printf(MSG_ERROR, "Altimeter CRC ERROR! ExpectedCRC: 0x%X, ReceivedCRC: 0x%X", expcrc, newcrc);
 		}
 	}
 
@@ -256,10 +259,10 @@ bool Altimeter::readBytes(uint8_t* buf, uint8_t len)
 		for(int i=0; i<len; i++)
 		{
 			buf[i] = Wire.read();
-			//Telemetry::printfNOLOG(MSG_INFO, "rec b%u: %x ",i, buf[i]);
+			Telemetry::printfNOLOG(MSG_INFO, "rec b%u: %x ",i, buf[i]);
 		}
 		uint8_t crc = Wire.read();
-		//Telemetry::printfNOLOG(MSG_INFO, "rec crc: %x ", crc);
+		Telemetry::printfNOLOG(MSG_INFO, "rec crc: %x ", crc);
 		if(generateCRC8(buf, len) != crc)
 		{
 			Telemetry::printf(MSG_ERROR, "Altimeter CRC ERROR!\n");
