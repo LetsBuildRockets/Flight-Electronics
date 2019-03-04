@@ -85,6 +85,23 @@ void Scheduler::addTask(TASK_PRIORITY taskPriortiy, ISR fun_ptr, uint32_t interv
 	newtask.name = name;
 	newtask.priority = taskPriortiy;
 
+	switch(taskPriortiy)
+	{
+	case LOW_PRIORITY:
+		// eh dont bother
+		break;
+	case HIGH_PRIORITY:
+		if(newtask.interval>200)
+			newtask.interval -= 200u;
+		break;
+	case HIGHER_PRIORITY:
+		if(newtask.interval>100)
+			newtask.interval -= 100u;
+		break;
+	case HIGHEST_PRIORITY:
+		break;
+	}
+
 	if(taskPriortiy == LOW_PRIORITY)
 	{
 		taskList_LOW_PRIORITY.push(newtask);

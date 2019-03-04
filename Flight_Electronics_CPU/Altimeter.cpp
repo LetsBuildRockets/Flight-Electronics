@@ -93,6 +93,7 @@ void Altimeter::getNewSample()
 		uint8_t len = Wire.requestFrom((unsigned char)ALTIMETER_ADDRESS, 9u);
 		DEBUGSERIAL.printf("len: %u\n", len);
 		if(len > 0) sampleIsReady = true;
+
 	}
 	if(!sampleIsReady)
 	{

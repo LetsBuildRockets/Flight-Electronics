@@ -28,10 +28,10 @@ void setup()
     Telemetry::printf(MSG_INFO, "***Built on  %s  at  %s***\n", __DATE__, __TIME__);
 
 	Altimeter::init();
-	//Power::init();
-	//Analog::init();
-	//GPS::init();
-	//IMU::init();
+	Power::init();
+	Analog::init();
+	GPS::init();
+	IMU::init();
 	Scheduler::init();
 
 	pinMode(PIN_LED, OUTPUT);
@@ -48,14 +48,13 @@ void setup()
 	// TODO: APRS
 
 	Scheduler::addTask(HIGH_PRIORITY, Analog::updateData, 500000lu, 0, "Update Analog Data");
-	//Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "avg alt: %.2f m\n", Altimeter::getAltitude()); }), 1000000lu, 0, "get Alt value");
+	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "avg alt: %.2f m\n", Altimeter::getAltitude()); }), 1000000lu, 0, "get Alt value");
 	Scheduler::addTask(LOW_PRIORITY, Altimeter::getNewSample, 1000000lu, 1000000lu, "get Alt sample");
-	//Scheduler::addTask(HIGHEST_PRIORITY, ([]() { digitalWriteFast(PIN_LED, !(digitalReadFast(PIN_LED))); }), 1000000lu, 0, "Blink");
-	//Scheduler::addTask(LOW_PRIORITY, getIMUData, 100000lu, 0, "IMU update");
-	Scheduler::addTask(LOW_PRIORITY, ([]() { digitalWriteFast(PIN_LED, !(digitalReadFast(PIN_LED))); }), 500000lu, 0, "Blink");
-	//Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "IMU Calibration: %s\n", IMU::getCalibration().c_str()); }), 5000000lu, 0, "IMU print calibration info");
+	Scheduler::addTask(LOW_PRIORITY, getIMUData, 100000lu, 0, "IMU update");
+	Scheduler::addTask(HIGHER_PRIORITY, ([]() { digitalWriteFast(PIN_LED, !(digitalReadFast(PIN_LED))); }), 50000lu, 0, "Blink");
+	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "IMU Calibration: %s\n", IMU::getCalibration().c_str()); }), 5000000lu, 0, "IMU print calibration info");
 	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "average Jitter: %.2f us\n", Scheduler::getAverageJitter()); }), 5000000lu, 0, "print average jitter");
-	//Scheduler::addTask(LOW_PRIORITY, checkBatteryStatus, 10000000lu, 0, "Check Battery State");
+	Scheduler::addTask(LOW_PRIORITY, checkBatteryStatus, 10000000lu, 0, "Check Battery State");
 	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "Free mem: %lu kB\n", FreeMem()/1000); }), 5000000lu, 0, "mem usage");
 
 
