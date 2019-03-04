@@ -25,9 +25,9 @@
 #define p_Pa_calib_0 45000.0
 #define p_Pa_calib_1 80000.0
 #define p_Pa_calib_2 105000.0
-#define LUT_lower 3.5 * (1<<20)
-#define LUT_upper 11.5 * (1<<20)
-#define quadr_factor 1 / 16777216.0
+#define LUT_lower 3.5 * (1U<<20)
+#define LUT_upper 11.5 * (1U<<20)
+#define quadr_factor (1 / 16777216.0)
 #define offst_factor 2048.0
 
 
@@ -79,6 +79,7 @@ namespace Altimeter
 {
 	namespace
 	{
+		// TODO: Make this stuff ISR safe
 		float altitudeFilterRingBuffer[ALTITUDE_FILTER_TAP_NUM];
 		int8_t altitudeFilterRingBufferIndex=0;
 		float velocityFilterRingBuffer[VELOCITY_FILTER_TAP_NUM];
@@ -94,7 +95,7 @@ namespace Altimeter
 	}
 	void init();
 	float getVelocity();
-	float getAlittude();
+	float getAltitude();
 	float getTempK();
 	float getTempC();
 	float getTempF();

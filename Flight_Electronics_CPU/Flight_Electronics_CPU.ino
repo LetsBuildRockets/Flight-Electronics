@@ -40,7 +40,7 @@ void setup()
 
 	// TODO: sequencer
 	// TODO: Flight Calculator
-	// TODO: read from altimeter, filter data, differentiate <-- need to test this....
+	// TODO: test reading altitude data. make atimeter interrupt safe.
 	// TODO: SD card buffering, and decrease timeout
 	// TODO: shift out for digital
 	// TODO: AX-12A Servo
@@ -48,9 +48,10 @@ void setup()
 	// TODO: APRS
 
 	Scheduler::addTask(HIGH_PRIORITY, Analog::updateData, 500000lu, 0, "Update Analog Data");
-	//Scheduler::addTask(HIGHEST_PRIORITY, ([]() { digitalWriteFast(PIN_LED, !(digitalReadFast(PIN_LED))); }), 1000000lu, 0, "Blink");
+	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "avg alt: %.2f m\n", Altimeter::getAltitude()); }), 1000000lu, 0, "get Alt value");
+	Scheduler::addTask(LOW_PRIORITY, Altimeter::getNewSample, 1000000lu, 1000000lu, "get Alt sample");
 	Scheduler::addTask(LOW_PRIORITY, getIMUData, 100000lu, 0, "IMU update");
-	Scheduler::addTask(LOW_PRIORITY, ([]() { digitalWriteFast(PIN_LED, !(digitalReadFast(PIN_LED))); }), 500000lu, 0, "Blink");
+	Scheduler::addTask(HIGHER_PRIORITY, ([]() { digitalWriteFast(PIN_LED, !(digitalReadFast(PIN_LED))); }), 50000lu, 0, "Blink");
 	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "IMU Calibration: %s\n", IMU::getCalibration().c_str()); }), 5000000lu, 0, "IMU print calibration info");
 	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "average Jitter: %.2f us\n", Scheduler::getAverageJitter()); }), 5000000lu, 0, "print average jitter");
 	Scheduler::addTask(LOW_PRIORITY, checkBatteryStatus, 10000000lu, 0, "Check Battery State");
