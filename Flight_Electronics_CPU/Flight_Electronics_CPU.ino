@@ -10,8 +10,12 @@
 #include "Scheduler.h"
 #include "Altimeter.h"
 #include "Logger.h"
+#include "Sequencer.h"
 
 uint32_t sss = 0;
+Sequencer *sequencer;
+
+
 void setup()
 {
 	DEBUGSERIAL.begin(DEBUG_BAUD_RATE);
@@ -33,6 +37,8 @@ void setup()
 	GPS::init();
 	IMU::init();
 	Scheduler::init();
+
+	sequencer = new Sequencer;
 
 	pinMode(PIN_LED, OUTPUT);
 
