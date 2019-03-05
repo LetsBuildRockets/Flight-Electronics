@@ -10,6 +10,7 @@
 #include "Scheduler.h"
 #include "Altimeter.h"
 #include "Logger.h"
+#include "aprs.h"
 
 
 
@@ -19,6 +20,7 @@ GPS *gps;
 
 void setup()
 {
+	#error This program uses enables the APRS transmitter, make sure you have a 50 ohm load connected. Comment this out to continue...
 	DEBUGSERIAL.begin(DEBUG_BAUD_RATE);
 	delay(2000);
 
@@ -43,8 +45,10 @@ void setup()
 	delay(1000);
 	gps->setSentencesToReceive(OUTPUT_RMC_GGA);
 	gps->setUpdateRate(UPDATE_RATE_5000);
-	// TODO init gps here
-	// TODO init aprs here
+
+
+	aprs_setup(50, PTT_PIN, 100, 0, 0);
+
 
 	pinMode(PIN_LED, OUTPUT);
 
@@ -56,12 +60,11 @@ void setup()
 	// TODO: SD card buffering, and decrease timeout
 	// TODO: shift out for digital
 	// TODO: AX-12A Servo
-	// TODO: GPS
-	// TODO: APRS
 
 	Scheduler::addTask(HIGH_PRIORITY, Analog::updateData, 500000lu, 0, "Update Analog Data");
 	Scheduler::addTask(HIGH_PRIORITY, getGPS, 100000lu, 0, "Poll GPS");
-	Scheduler::addTask(HIGH_PRIORITY, printGPS, 100000lu, 0, "Print GPS");
+	//Scheduler::addTask(HIGH_PRIORITY, printGPS, 100000lu, 0, "Print GPS");
+	Scheduler::addTask(HIGH_PRIORITY, ([]() { broadcastLocation("um. is this think working?"); }), 10000000ul, 30000000ul, "Queue an APRS broadcast");
 	//Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "avg alt: %.2f m\n", Altimeter::getAltitude()); }), 1000000lu, 0, "get Alt value");
 	//Scheduler::addTask(LOW_PRIORITY, Altimeter::getNewSample, 1000000lu, 1000000lu, "get Alt sample");
 	//Scheduler::addTask(LOW_PRIORITY, getIMUData, 100000lu, 0, "IMU update");
@@ -97,14 +100,74 @@ void printGPS()
 {
 	int rtn = -1;
 	if (gps->sentenceAvailable())
-	  rtn = gps->parseSentence();
+	{
+		DEBUGSERIAL.printf("GPS sent: %s", gps->getLastSentence());
+		rtn = gps->parseSentence();
+	}
 
 	if(rtn!=-1) Telemetry::printf(MSG_ERROR, "GPS returned: %i, fix: %i, quality: %i, sats: %i\n", rtn, gps->fix, gps->fixquality, gps->satellites);
-	if (gps->newValuesSinceDataRead()) {
-	gps->dataRead();
-	Serial.printf("Location: %f, %f altitude %f\n\r",
-		  gps->latitude, gps->longitude, gps->altitude);
+	if (gps->newValuesSinceDataRead())
+	{
+		gps->dataRead();
+		Serial.printf("Location: %f, %f altitude %f\n\r", gps->latitude, gps->longitude, gps->altitude);
 	}
+}
+
+struct PathAddress addresses[] = {
+  {(char *)D_CALLSIGN, D_CALLSIGN_ID},  // Destination callsign
+  {(char *)S_CALLSIGN, S_CALLSIGN_ID},  // Source callsign
+  {(char *)NULL, 0}, // Digi1 (first digi in the chain)
+  {(char *)NULL, 0}  // Digi2 (second digi in the chain)
+};
+
+void broadcastLocation(const char *comment)
+{
+	if(!gps->fix) Telemetry::printf(MSG_WARNING, "No GPS Fix");
+	Telemetry::printf(MSG_GPS, "%d,%u,%u,%u,%f,%f,%f,%u,%f,%u", gps->fix, gps->day, gps->hour, gps->minute ,gps->latitude, gps->longitude,gps->altitude,gps->heading,gps->speed,gps->satellites);
+	// If above 5000 feet switch to a single hop path
+	int nAddresses;
+	if (gps->altitude > 1500) {
+	// APRS recomendations for > 5000 feet is:
+	// Path: WIDE2-1 is acceptable, but no path is preferred.
+	nAddresses = 3;
+	addresses[2].callsign = "WIDE2";
+	addresses[2].ssid = 1;
+	} else {
+	// Below 1500 meters use a much more generous path (assuming a mobile station)
+	// Path is "WIDE1-1,WIDE2-2"
+	nAddresses = 4;
+	addresses[2].callsign = "WIDE1";
+	addresses[2].ssid = 1;
+	addresses[3].callsign = "WIDE2";
+	addresses[3].ssid = 2;
+	}
+
+	// For debugging print out the path
+	/*Serial.print("APRS(");
+	Serial.print(nAddresses);
+	Serial.print("): ");
+	for (int i=0; i < nAddresses; i++) {
+	Serial.print(addresses[i].callsign);
+	Serial.print('-');
+	Serial.print(addresses[i].ssid);
+	if (i < nAddresses-1)
+		Serial.print(',');
+	}
+	Serial.print(' ');
+	Serial.print(SYMBOL_TABLE);
+	Serial.print(SYMBOL_CHAR);
+	Serial.println();*/
+
+	// Send the packet
+	aprs_send(addresses, nAddresses
+		,gps->day, gps->hour, gps->minute
+		,gps->latitude, gps->longitude // degrees
+		,gps->altitude // meters
+		,gps->heading
+		,gps->speed
+		,SYMBOL_TABLE
+		,SYMBOL_CHAR
+		,comment);
 }
 
 void getIMUData()
