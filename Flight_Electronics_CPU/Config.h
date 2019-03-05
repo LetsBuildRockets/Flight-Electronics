@@ -18,7 +18,7 @@
 #define TELEMETRYSERIAL Serial1
 #define TELEMETRY_BAUD_RATE 57600
 
-#define GPSSERIAL Serial3 // PINS 7 and 8
+#define GPSSERIAL Serial5
 #define GPS_BAUD_RATE 9600
 
 #define PIN_LED 13
@@ -26,6 +26,9 @@
 
 #define I2C_CLOCK_SPEED 100000 // TODO: Change to 400000. Testing required
 #define I2C_TIMEOUT 1000 // TODO: decrease this timeout, maybe to like 100ms?
+#define I2C0_SCL 7
+#define I2C0_SDA 8
+
 
 // APRS Information
 #define PTT_PIN 31 // Push to talk pin

@@ -11,7 +11,12 @@
 #include "Altimeter.h"
 #include "Logger.h"
 
+
+
 uint32_t sss = 0;
+
+GPS *gps;
+
 void setup()
 {
 	DEBUGSERIAL.begin(DEBUG_BAUD_RATE);
@@ -30,9 +35,16 @@ void setup()
 	Altimeter::init();
 	Power::init();
 	Analog::init();
-	GPS::init();
 	IMU::init();
 	Scheduler::init();
+
+	gps = new GPS(&GPSSERIAL,false);
+	gps->startSerial(GPS_BAUD_RATE);
+	delay(1000);
+	gps->setSentencesToReceive(OUTPUT_RMC_GGA);
+	gps->setUpdateRate(UPDATE_RATE_5000);
+	// TODO init gps here
+	// TODO init aprs here
 
 	pinMode(PIN_LED, OUTPUT);
 
@@ -48,10 +60,12 @@ void setup()
 	// TODO: APRS
 
 	Scheduler::addTask(HIGH_PRIORITY, Analog::updateData, 500000lu, 0, "Update Analog Data");
-	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "avg alt: %.2f m\n", Altimeter::getAltitude()); }), 1000000lu, 0, "get Alt value");
-	Scheduler::addTask(LOW_PRIORITY, Altimeter::getNewSample, 1000000lu, 1000000lu, "get Alt sample");
-	Scheduler::addTask(LOW_PRIORITY, getIMUData, 100000lu, 0, "IMU update");
-	Scheduler::addTask(HIGHER_PRIORITY, ([]() { digitalWriteFast(PIN_LED, !(digitalReadFast(PIN_LED))); }), 50000lu, 0, "Blink");
+	Scheduler::addTask(HIGH_PRIORITY, getGPS, 100000lu, 0, "Poll GPS");
+	Scheduler::addTask(HIGH_PRIORITY, printGPS, 100000lu, 0, "Print GPS");
+	//Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "avg alt: %.2f m\n", Altimeter::getAltitude()); }), 1000000lu, 0, "get Alt value");
+	//Scheduler::addTask(LOW_PRIORITY, Altimeter::getNewSample, 1000000lu, 1000000lu, "get Alt sample");
+	//Scheduler::addTask(LOW_PRIORITY, getIMUData, 100000lu, 0, "IMU update");
+	Scheduler::addTask(HIGHER_PRIORITY, ([]() { digitalWriteFast(PIN_LED, !(digitalReadFast(PIN_LED))); }), 500000lu, 0, "Blink");
 	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "IMU Calibration: %s\n", IMU::getCalibration().c_str()); }), 5000000lu, 0, "IMU print calibration info");
 	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "average Jitter: %.2f us\n", Scheduler::getAverageJitter()); }), 5000000lu, 0, "print average jitter");
 	Scheduler::addTask(LOW_PRIORITY, checkBatteryStatus, 10000000lu, 0, "Check Battery State");
@@ -72,6 +86,25 @@ void loop()
 {
 	Scheduler::tickSoft();
 	delayMicroseconds(100);
+}
+
+void getGPS()
+{
+	gps->poll();
+}
+
+void printGPS()
+{
+	int rtn = -1;
+	if (gps->sentenceAvailable())
+	  rtn = gps->parseSentence();
+
+	if(rtn!=-1) Telemetry::printf(MSG_ERROR, "GPS returned: %i, fix: %i, quality: %i, sats: %i\n", rtn, gps->fix, gps->fixquality, gps->satellites);
+	if (gps->newValuesSinceDataRead()) {
+	gps->dataRead();
+	Serial.printf("Location: %f, %f altitude %f\n\r",
+		  gps->latitude, gps->longitude, gps->altitude);
+	}
 }
 
 void getIMUData()

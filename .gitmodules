@@ -9,4 +9,4 @@
 	url = https://github.com/greiman/SdFat
 [submodule "Flight_Electronics_CPU/libraries/ultimate_gps_teensy3"]
 	path = Flight_Electronics_CPU/libraries/ultimate_gps_teensy3
-	url = https://github.com/rvnash/ultimate_gps_teensy3
+	url = https://github.com/ericsims/ultimate_gps_teensy3
