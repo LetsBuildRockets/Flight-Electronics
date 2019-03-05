@@ -24,27 +24,42 @@ Sequencer::Sequencer()
 
 Sequencer::~Sequencer()
 {
-	struct SeqTask *head = (struct SeqTask*)firstSeqTask;
+	struct SeqTask **head = (struct SeqTask**) firstSeqTask;
 	while(head != NULL)
 	{
-		struct SeqTask *next = (struct SeqTask*)head->nextSeqTask;
+		struct SeqTask *next = (struct SeqTask*)(*head)->nextSeqTask;
 		free((void*)head);
-		head = next;
+		(*head) = next;
 	}
 }
 
 void Sequencer::addSeqTask(struct SeqTask newSeqTask)
 {
-	struct SeqTask *head = (struct SeqTask*) firstSeqTask;
+	struct SeqTask **head = (struct SeqTask**) firstSeqTask;
 	if(head == NULL) Sequencer(); // i guess i can do this...
-	while(head->nextSeqTask != NULL) head = (struct SeqTask*) head->nextSeqTask;
+	while((*head)->nextSeqTask != NULL) (*head) = (struct SeqTask*) (*head)->nextSeqTask;
 	volatile struct SeqTask *anotherSeqTask = (struct SeqTask*)malloc(sizeof(struct SeqTask));
 	anotherSeqTask->comment = newSeqTask.comment;
 	anotherSeqTask->startTime = newSeqTask.startTime;
 	anotherSeqTask->duration = newSeqTask.duration;
 	anotherSeqTask->functionPtr = newSeqTask.functionPtr;
 	anotherSeqTask->nextSeqTask = NULL;
-	head->nextSeqTask=anotherSeqTask;
+	(*head)->nextSeqTask=anotherSeqTask;
+}
+
+
+void Sequencer::addSeqTask(int32_t startTime, uint16_t duration, void (*functionPtr)(void), const char * comment)
+{
+	struct SeqTask **head = (struct SeqTask**) firstSeqTask;
+	if(*head == NULL) Sequencer(); // i guess i can do this...
+	while((*head)->nextSeqTask != NULL) (*head) = (struct SeqTask*) (*head)->nextSeqTask;
+	volatile struct SeqTask *anotherSeqTask = (struct SeqTask*)malloc(sizeof(struct SeqTask));
+	anotherSeqTask->comment = comment;
+	anotherSeqTask->startTime = startTime;
+	anotherSeqTask->duration = duration;
+	anotherSeqTask->functionPtr = functionPtr;
+	anotherSeqTask->nextSeqTask = NULL;
+	(*head)->nextSeqTask=anotherSeqTask;
 }
 
 void Sequencer::printTaskList()
@@ -53,7 +68,7 @@ void Sequencer::printTaskList()
 	Serial.println("Sequencer Task List: ");
 	while(head != NULL)
 	{
-		Serial.printf("%d: %s\n", head->startTime, head->comment);
+		Serial.printf("%dms: %ulms, %s\n", head->startTime, head->duration, head->comment);
 		head = (struct SeqTask*) head->nextSeqTask;
 	}
 }

@@ -38,7 +38,16 @@ void setup()
 	IMU::init();
 	Scheduler::init();
 
-	sequencer = new Sequencer;
+	sequencer = new Sequencer();
+	sequencer->addSeqTask(-20000, 0, ([](){;}), "bleh");
+	sequencer->addSeqTask(-10000, 10, ([](){;}), "bleh2");
+	sequencer->addSeqTask(0, 10, ([](){;}), "bleh3");
+	sequencer->addSeqTask(100, 10, ([](){;}), "fucking liftoff");
+	sequencer->printTaskList();
+
+
+
+
 
 	pinMode(PIN_LED, OUTPUT);
 

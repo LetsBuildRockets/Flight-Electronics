@@ -30,6 +30,7 @@ class Sequencer
 		Sequencer();
 		~Sequencer();
 		void addSeqTask(struct SeqTask newSeqTask);
+		void addSeqTask(int32_t startTime, uint16_t duration, void (*functionPtr)(void), const char * comment);
 		void tick();
 		void printTaskList();
 
