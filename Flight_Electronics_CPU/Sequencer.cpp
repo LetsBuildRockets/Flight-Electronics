@@ -7,19 +7,24 @@
 
 #include "Sequencer.h"
 
-volatile uint16_t Sequencer::startTime = millis();
-volatile struct SeqTask* Sequencer::firstSeqTask = (SeqTask*)malloc(sizeof(SeqTask));
-volatile struct SeqTask* Sequencer::listHead = Sequencer::firstSeqTask;
-volatile SeqState Sequencer::state = HOLD;
-
-Sequencer::Sequencer()
+Sequencer::Sequencer(int32_t countDownStartTime)
 {
+	firstSeqTask = (SeqTask*)malloc(sizeof(SeqTask));
+	listHead = firstSeqTask;
+	state = HOLD;
+
+	if(firstSeqTask == NULL)
+	{
+		Telemetry::printf(MSG_ERROR, "unable to allocate memory for new task sequence!\n");
+		return;
+	}
+
 	firstSeqTask->comment = "Initialization";
-	firstSeqTask->startTime = COUNTDOWN_START*1000l;
+	firstSeqTask->startTime = countDownStartTime;
 	firstSeqTask->duration = 0;
 	firstSeqTask->functionPtr = ([]() {Telemetry::printf(MSG_INFO, "Sequencer Init");});
 
-	startTime = millis();
+	seqStartTime = 0;
 }
 
 Sequencer::~Sequencer()
@@ -33,33 +38,35 @@ Sequencer::~Sequencer()
 	}
 }
 
-void Sequencer::addSeqTask(struct SeqTask newSeqTask)
+int Sequencer::addSeqTask(struct SeqTask newSeqTask)
 {
-	struct SeqTask **head = (struct SeqTask**) firstSeqTask;
-	if(head == NULL) Sequencer(); // i guess i can do this...
-	while((*head)->nextSeqTask != NULL) (*head) = (struct SeqTask*) (*head)->nextSeqTask;
-	volatile struct SeqTask *anotherSeqTask = (struct SeqTask*)malloc(sizeof(struct SeqTask));
-	anotherSeqTask->comment = newSeqTask.comment;
-	anotherSeqTask->startTime = newSeqTask.startTime;
-	anotherSeqTask->duration = newSeqTask.duration;
-	anotherSeqTask->functionPtr = newSeqTask.functionPtr;
-	anotherSeqTask->nextSeqTask = NULL;
-	(*head)->nextSeqTask=anotherSeqTask;
+	return addSeqTask(newSeqTask.startTime, newSeqTask.duration, newSeqTask.functionPtr, newSeqTask.comment);
 }
 
 
-void Sequencer::addSeqTask(int32_t startTime, uint16_t duration, void (*functionPtr)(void), const char * comment)
+int Sequencer::addSeqTask(int32_t startTime, uint16_t duration, void (*functionPtr)(void), const char * comment)
 {
 	struct SeqTask **head = (struct SeqTask**) firstSeqTask;
-	if(*head == NULL) Sequencer(); // i guess i can do this...
+	if(head == NULL) return SEQ_ERR_NO_HEAD;
 	while((*head)->nextSeqTask != NULL) (*head) = (struct SeqTask*) (*head)->nextSeqTask;
+	if((*head)->startTime >= startTime)
+	{
+		Telemetry::printf(MSG_ERROR, "you tried to add a task to a sequence that is out of order!");
+		return SEQ_ERR_OUTOFORDER;
+	}
 	volatile struct SeqTask *anotherSeqTask = (struct SeqTask*)malloc(sizeof(struct SeqTask));
+	if(anotherSeqTask == NULL)
+	{
+		Telemetry::printf(MSG_ERROR, "unable to allocate memory to add another task!\n");
+		return SEQ_ERR_NO_MEM;
+	}
 	anotherSeqTask->comment = comment;
 	anotherSeqTask->startTime = startTime;
 	anotherSeqTask->duration = duration;
 	anotherSeqTask->functionPtr = functionPtr;
 	anotherSeqTask->nextSeqTask = NULL;
 	(*head)->nextSeqTask=anotherSeqTask;
+	return SEQ_ERR_NONE;
 }
 
 void Sequencer::printTaskList()
@@ -73,17 +80,43 @@ void Sequencer::printTaskList()
 	}
 }
 
+void Sequencer::setState(SeqState newState)
+{
+	state = newState;
+}
+
+void Sequencer::start()
+{
+	if(state != RUNNING && state != HOLD)
+	{
+		state = RUNNING;
+		seqStartTime = millis();
+	}
+	else
+	{
+		Telemetry::printf(MSG_WARNING, "I tried to start the sequencer, but its already running!");
+	}
+}
+
+void Sequencer::reset()
+{
+	state = HAVENOTRUNYET;
+	seqStartTime = 0;
+	listHead = firstSeqTask;
+}
+
 void Sequencer::tick()
 {
 	switch(state)
 	{
-	case(ABORT):
+		case(HAVENOTRUNYET):
 			break;
-	case(HOLD):
+		case(HOLD):
 			break;
-	case(RUNNING):
+		case(RUNNING):
+
 			break;
-	default:
-		Telemetry::printf(MSG_ERROR, "INVALID sequencer state: %u", (unsigned int)state);
+		default:
+			Telemetry::printf(MSG_ERROR, "INVALID sequencer state: %u", (unsigned int)state);
 	}
 }

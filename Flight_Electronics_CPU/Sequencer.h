@@ -12,7 +12,10 @@
 
 #include "Telemetry.h"
 
-#define COUNTDOWN_START -30 // start at T-30 Seconds
+#define SEQ_ERR_NONE	      0
+#define SEQ_ERR_NO_MEM		 -1
+#define SEQ_ERR_NO_HEAD		 -2
+#define SEQ_ERR_OUTOFORDER	 -3
 
 struct SeqTask {
 	int32_t startTime; // in millis
@@ -22,23 +25,26 @@ struct SeqTask {
 	volatile struct SeqTask * nextSeqTask;
 };
 
-enum SeqState {ABORT, HOLD, RUNNING};
+enum SeqState {HAVENOTRUNYET, HOLD, RUNNING};
 
 class Sequencer
 {
 	public:
-		Sequencer();
+		Sequencer(int32_t coundownStartTime);
 		~Sequencer();
-		void addSeqTask(struct SeqTask newSeqTask);
-		void addSeqTask(int32_t startTime, uint16_t duration, void (*functionPtr)(void), const char * comment);
+		int addSeqTask(struct SeqTask newSeqTask);
+		int addSeqTask(int32_t startTime, uint16_t duration, void (*functionPtr)(void), const char * comment);
 		void tick();
 		void printTaskList();
+		void setState(SeqState newState);
+		void reset();
+		void start();
 
 	private:
-		static volatile SeqState state;
-		static volatile struct SeqTask * firstSeqTask;
-		static volatile struct SeqTask * listHead;
-		static volatile uint16_t startTime;
+		volatile SeqState state;
+		volatile struct SeqTask * firstSeqTask;
+		volatile struct SeqTask * listHead;
+		volatile int32_t seqStartTime;
 };
 
 #endif /* SEQUENCER_H_ */
