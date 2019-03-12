@@ -87,7 +87,7 @@ void Sequencer::setState(SeqState newState)
 
 void Sequencer::start()
 {
-	if(state != RUNNING && state != HOLD)
+	if(state == HAVENOTRUNYET)
 	{
 		state = RUNNING;
 		seqStartTime = millis();
@@ -107,15 +107,29 @@ void Sequencer::reset()
 
 void Sequencer::tick()
 {
+	int32_t countdownTime = millis() - seqStartTime + firstSeqTask->startTime;
 	switch(state)
 	{
+		case(DONE):
+			break;
 		case(HAVENOTRUNYET):
 			break;
 		case(HOLD):
 			break;
 		case(RUNNING):
-
+		{
+			struct SeqTask **task = (struct SeqTask**) listHead;
+			if(countdownTime - (*task)->startTime > 0)
+			{
+				if((*task)->functionPtr != NULL) (*task)->functionPtr();
+				if(countdownTime - (*task)->startTime >= (*task)->duration)
+				{
+					(*task) = (struct SeqTask*) (*task)->nextSeqTask;
+				}
+			}
+			if(*task == NULL) state = DONE;
 			break;
+		}
 		default:
 			Telemetry::printf(MSG_ERROR, "INVALID sequencer state: %u", (unsigned int)state);
 	}

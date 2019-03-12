@@ -13,7 +13,7 @@
 #include "Sequencer.h"
 
 uint32_t sss = 0;
-Sequencer *sequencer;
+Sequencer *sequencerT;
 
 
 void setup()
@@ -38,12 +38,12 @@ void setup()
 	IMU::init();
 	Scheduler::init();
 
-	sequencer = new Sequencer(-30000);
-	sequencer->addSeqTask(-20000, 0, ([](){;}), "bleh");
-	sequencer->addSeqTask(-10000, 10, ([](){;}), "bleh2");
-	sequencer->addSeqTask(0, 10, ([](){;}), "bleh3");
-	sequencer->addSeqTask(100, 10, ([](){;}), "fucking liftoff");
-	sequencer->printTaskList();
+	sequencerT = new Sequencer(-30000);
+	sequencerT->addSeqTask(-20000, 0, ([](){Telemetry::printf(MSG_INFO, "bleh");}), "bleh");
+	sequencerT->addSeqTask(-10000, 10, ([](){Telemetry::printf(MSG_INFO, "bleh2");}), "bleh2");
+	sequencerT->addSeqTask(0, 10, ([](){Telemetry::printf(MSG_INFO, "bleh3");}), "bleh3");
+	sequencerT->addSeqTask(100, 10, ([](){Telemetry::printf(MSG_INFO, "liftoff");}), "fucking liftoff");
+	sequencerT->printTaskList();
 
 
 
@@ -63,6 +63,8 @@ void setup()
 	// TODO: APRS
 
 	Scheduler::addTask(HIGH_PRIORITY, Analog::updateData, 500000lu, 0, "Update Analog Data");
+	Scheduler::addTask(HIGH_PRIORITY, ([]() {sequencerT->tick();}), 1000lu, 0, "Tick Seqeuncer");
+	Scheduler::addTask(HIGH_PRIORITY, ([]() {sequencerT->start();}), 0, 10000000ul, "Start Seqeuncer");
 	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "avg alt: %.2f m\n", Altimeter::getAltitude()); }), 1000000lu, 0, "get Alt value");
 	Scheduler::addTask(LOW_PRIORITY, Altimeter::getNewSample, 1000000lu, 1000000lu, "get Alt sample");
 	Scheduler::addTask(LOW_PRIORITY, getIMUData, 100000lu, 0, "IMU update");

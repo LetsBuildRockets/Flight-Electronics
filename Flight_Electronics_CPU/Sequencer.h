@@ -25,7 +25,7 @@ struct SeqTask {
 	volatile struct SeqTask * nextSeqTask;
 };
 
-enum SeqState {HAVENOTRUNYET, HOLD, RUNNING};
+enum SeqState {HAVENOTRUNYET, HOLD, RUNNING, DONE};
 
 class Sequencer
 {
