@@ -22,6 +22,7 @@ namespace IMU
 	namespace
 	{
 		Adafruit_BNO055 bno = Adafruit_BNO055(55);
+		bool imuRunning = false;
 	}
 	void init();
 	imu::Quaternion getQuat();

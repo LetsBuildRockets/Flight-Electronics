@@ -14,10 +14,12 @@ void IMU::init()
 	if(!bno.begin())
 	{
 		Telemetry::printf(MSG_ERROR, "IMU NOT CONNECTED!\n");
+		imuRunning = false;
 	}
 	else
 	{
 		Telemetry::printf(MSG_INFO, "IMU is connected\n");
+		imuRunning = true;
 	}
 	bno.setExtCrystalUse(true);
 }
@@ -37,9 +39,10 @@ sensors_vec_t IMU::getEuler()
 
 String IMU::getCalibration()
 {
-	uint8_t sys, gyro, accel, mag = 0;
+	uint8_t sys = 0, gyro = 0, accel = 0, mag = 0;
 	char buffer[128];
-	bno.getCalibration(&sys, &gyro, &accel, &mag);
+	if(imuRunning)
+		bno.getCalibration(&sys, &gyro, &accel, &mag);
 	sprintf(buffer, "sys: %d, gyro: %d, accel: %d, mag: %d", sys, gyro, accel, mag);
 	return String(buffer);
 }

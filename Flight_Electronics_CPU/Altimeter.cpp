@@ -39,6 +39,8 @@ void Altimeter::init()
 	delay(1);
 	if(!updateOPT()) Telemetry::printf(MSG_ERROR, "Unable to get Altimeter OPT params!\n");
 	send16BitWord(0x805D); // soft reset
+	delay(1);
+	send16BitWord(ALTIMITER_MODE_LOW_POWER);
 }
 
 bool Altimeter::updateOPT()
@@ -84,16 +86,14 @@ float Altimeter::getVelocity()
 
 void Altimeter::getNewSample()
 {
-	send16BitWord(ALTIMITER_MODE_LOW_POWER);
 	uint8_t buf[6] = {0};
 
-	delayMicroseconds(5);
 	bool sampleIsReady = false;
 	for(int i=0; i<10 && !sampleIsReady; i++){
+		delayMicroseconds(1);
 		uint8_t len = Wire.requestFrom((unsigned char)ALTIMETER_ADDRESS, 9u);
-		DEBUGSERIAL.printf("len: %u\n", len);
+		//DEBUGSERIAL.printf("len: %u\n", len);
 		if(len > 0) sampleIsReady = true;
-
 	}
 	if(!sampleIsReady)
 	{
@@ -102,9 +102,9 @@ void Altimeter::getNewSample()
 	}
 	for(int i=0; i<3; i++)
 	{
-		//buf[0+i*2] = Wire.read();
-		//buf[1+i*2] = Wire.read();
-		Telemetry::printf(MSG_ERROR, "new samp byte %i: 0x%02X, byte %i: 0x%2X",i*2,Wire.read(),1+i*2,Wire.read());
+		buf[0+i*2] = Wire.read();
+		buf[1+i*2] = Wire.read();
+		//Telemetry::printf(MSG_ERROR, "new samp byte %i: 0x%02X, byte %i: 0x%2X",i*2,buf[0+i*2],1+i*2,buf[1+i*2]);
 		uint8_t newcrc = Wire.read();
 		uint8_t expcrc = generateCRC8(buf+i*2, 2);
 		if(expcrc != newcrc)
@@ -179,6 +179,8 @@ void Altimeter::getNewSample()
 	altitudeFilterRingBufferIndex++;
 	if(altitudeFilterRingBufferIndex>=ALTITUDE_FILTER_TAP_NUM) altitudeFilterRingBufferIndex = 0;
 	altitudeFilterRingBuffer[altitudeFilterRingBufferIndex] = newAlt;
+
+	send16BitWord(ALTIMITER_MODE_LOW_POWER);
 }
 
 float Altimeter::getTempC()

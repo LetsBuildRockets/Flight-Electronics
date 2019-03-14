@@ -145,8 +145,8 @@ void Scheduler::tickSoft()
 			{
 				//DEBUGSERIAL.printf("Name: %s, elapsed: %lu\n", currentTask.name.c_str(), elapsed);
 				uint16_t jitter = elapsed-currentTask.interval;
-				if(jitter >= 10000) Telemetry::printf(MSG_WARNING, "jitter for this scheduled task [%s] was %ld us!\n", currentTask.name.c_str(), jitter);
-				if(averageJitter >= 1000) Telemetry::printf(MSG_WARNING, "average schedule jitter is %0.2f us!\n", averageJitter);
+				if(jitter >= 100000) Telemetry::printf(MSG_WARNING, "jitter for this scheduled task [%s] was %ld us!\n", currentTask.name.c_str(), jitter);
+				if(averageJitter >= 10000) Telemetry::printf(MSG_WARNING, "average schedule jitter is %0.2f us!\n", averageJitter);
 				currentTask.lastExecuteTime = currentTime;
 				currentTask.fun_ptr();
 				averageJitter = approxRollingAverage(averageJitter, jitter);
