@@ -9,11 +9,11 @@
 
 void Altimeter::init()
 {
-	Wire.setSCL(33);
-	Wire.setSDA(34);
-	Wire.begin(); // this might be the second time we call wire.begin... we need to make sure it doesn't cause problems
+	Wire.setSCL(I2C_PIN_SCL);
+	Wire.setSDA(I2C_PIN_SDA);
 	Wire.setClock(I2C_CLOCK_SPEED);
 	Wire.setTimeout(I2C_TIMEOUT);
+	Wire.begin();
 
 	velocity = 0;
 	pressure = 0;

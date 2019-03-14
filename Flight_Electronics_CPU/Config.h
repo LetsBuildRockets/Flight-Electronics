@@ -24,8 +24,10 @@
 #define PIN_LED 13
 #define PIN_PAD_POWER 2
 
-#define I2C_CLOCK_SPEED 400000 // TODO: Change to 400000. Testing required
-#define I2C_TIMEOUT 1000 // TODO: decrease this timeout, maybe to like 100ms?
+#define I2C_CLOCK_SPEED 400000
+#define I2C_TIMEOUT 1000
+#define I2C_PIN_SCL 7
+#define I2C_PIN_SDA 8
 
 // APRS Information
 #define PTT_PIN 31 // Push to talk pin

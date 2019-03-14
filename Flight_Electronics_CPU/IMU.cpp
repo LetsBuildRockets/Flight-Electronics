@@ -9,8 +9,10 @@
 
 void IMU::init()
 {
-	Wire.setSCL(33);
-	Wire.setSDA(34);
+	Wire.setSCL(I2C_PIN_SCL);
+	Wire.setSDA(I2C_PIN_SDA);
+	Wire.setClock(I2C_CLOCK_SPEED);
+	Wire.setTimeout(I2C_TIMEOUT);
 	if(!bno.begin())
 	{
 		Telemetry::printf(MSG_ERROR, "IMU NOT CONNECTED!\n");
