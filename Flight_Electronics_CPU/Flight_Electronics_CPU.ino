@@ -47,6 +47,8 @@ void setup()
 	gps->setUpdateRate(UPDATE_RATE_5000);
 
 
+	// ensure we aren't driving the lookback pin
+	pinMode(23, INPUT);
 	aprs_setup(50, PTT_PIN, 100, 0, 0);
 
 
