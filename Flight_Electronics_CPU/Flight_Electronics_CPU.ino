@@ -55,11 +55,9 @@ void setup()
 
 	// TODO: sequencer
 	// TODO: Flight Calculator
-	// TODO: test reading altitude data. make atimeter interrupt safe.
+	// TODO: make atimeter interrupt safe.
 	// TODO: SD card buffering, and decrease timeout
-	// TODO: shift out for digital
 	// TODO: AX-12A Servo
-	// TODO: GPS
 	// TODO: APRS
 
 	Scheduler::addTask(HIGH_PRIORITY, Analog::updateData, 500000lu, 0, "Update Analog Data");
