@@ -15,6 +15,7 @@
 
 #include "Config.h"
 #include "Telemetry.h"
+#include "Logger.h"
 
 #define ALTIMITER_MODE_LOW_POWER 0x401A // up to ~300Hz ?
 #define ALTIMETER_MODE_NORMAL 0x48A3 // up to 140Hz ?

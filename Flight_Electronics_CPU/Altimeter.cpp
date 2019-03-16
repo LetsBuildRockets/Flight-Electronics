@@ -166,6 +166,7 @@ void Altimeter::getNewSample()
 		const float Ps=5474.89;
 		newAlt = Tb/(L*expf( logf(pressure/Ps) / ((CONST_G*CONST_M)/(CONST_R*L))))-Tb/L+H;
 	}
+	Logger::printf("alt %.3f, %.3f\n", pressure, newAlt);
 	//DEBUGSERIAL.printf("pressure: %f, altitude: %f\n", pressure, newAlt);
 	float lastAltitude = altitudeFilterRingBuffer[altitudeFilterRingBufferIndex];
 	uint32_t newTime = micros();

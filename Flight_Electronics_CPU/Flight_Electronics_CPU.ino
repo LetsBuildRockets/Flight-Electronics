@@ -21,9 +21,14 @@ GPS *gps;
 
 void setup()
 {
-	#error This program uses enables the APRS transmitter, make sure you have a 50 ohm load connected. Comment this out to continue...
+	//#error This program uses enables the APRS transmitter, make sure you have a 50 ohm load connected. Comment this out to continue...
+
 	DEBUGSERIAL.begin(DEBUG_BAUD_RATE);
 	delay(2000);
+
+	// ensure we aren't driving the lookback pin
+	pinMode(23, INPUT);
+	aprs_setup(50, PTT_PIN, 500, 200, 50);
 
 	DEBUGSERIAL.print("booting....\n");
 
@@ -40,7 +45,6 @@ void setup()
 	Analog::init();
 	IMU::init();
 	Scheduler::init();
-
 
 	sequencerT = new Sequencer(-30000);
 	Serial.println("got this far...0");
@@ -59,11 +63,6 @@ void setup()
 	gps->setUpdateRate(UPDATE_RATE_5000);
 
 
-	// ensure we aren't driving the lookback pin
-	pinMode(23, INPUT);
-	aprs_setup(50, PTT_PIN, 100, 0, 0);
-
-
 	pinMode(PIN_LED, OUTPUT);
 
 	Analog::updateData();
@@ -75,15 +74,16 @@ void setup()
 	// TODO: AX-12A Servo
 
 	// TODO: Um using high priority tasks breaks everything... don't do it until its fixed. thanks bye.
-	Scheduler::addTask(HIGH_PRIORITY, Analog::updateData, 500000lu, 0, "Update Analog Data");
-	Scheduler::addTask(HIGH_PRIORITY, getGPS, 100000lu, 0, "Poll GPS");
-	//Scheduler::addTask(HIGH_PRIORITY, printGPS, 100000lu, 0, "Print GPS");
-	Scheduler::addTask(HIGH_PRIORITY, ([]() { broadcastLocation("um. is this think working?"); }), 10000000ul, 30000000ul, "Queue an APRS broadcast");
+
+	//Scheduler::addTask(LOW_PRIORITY, Analog::updateData, 500000lu, 0, "Update Analog Data");
+	Scheduler::addTask(LOW_PRIORITY, getGPS, 100000lu, 0, "Poll GPS");
+	//Scheduler::addTask(LOW_PRIORITY, printGPS, 100000lu, 0, "Print GPS");
+	Scheduler::addTask(LOW_PRIORITY, ([]() { broadcastLocation("um. is this think working?"); }), 10000000ul, 0000000ul, "Queue an APRS broadcast");
 	//Scheduler::addTask(LOW_PRIORITY, ([]() {sequencerT->tick();}), 1000lu, 0, "Tick Seqeuncer");
 	//Scheduler::addTask(LOW_PRIORITY, ([]() {sequencerT->start();}), 0, 10000000ul, "Start Seqeuncer");
 	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "avg alt: %.2f m\n", Altimeter::getAltitude()); }), 1000000lu, 0, "get Alt value");
 	Scheduler::addTask(LOW_PRIORITY, Altimeter::getNewSample, 100000lu, 1000000lu, "get Alt sample");
-//	Scheduler::addTask(LOW_PRIORITY, getIMUData, 100000lu, 0, "IMU update");
+	Scheduler::addTask(LOW_PRIORITY, getIMUData, 100000lu, 0, "IMU update");
 	Scheduler::addTask(LOW_PRIORITY, ([]() { digitalWriteFast(PIN_LED, !(digitalReadFast(PIN_LED))); }), 500000lu, 0, "Blink");
 	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "IMU Calibration: %s\n", IMU::getCalibration().c_str()); }), 5000000lu, 0, "IMU print calibration info");
 	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "average Jitter: %.2f us\n", Scheduler::getAverageJitter()); }), 5000000lu, 0, "print average jitter");
@@ -97,7 +97,7 @@ void setup()
 	// Scheduler::addTask(HIGH_PRIORITY, ([]() { DEBUGSERIAL.printf("hanging HIGH priority now...\n"); DEBUGSERIAL.printf("boop elapsed: %lu, timenow:%lu\n", micros()-sss, micros()); while(1);}), 20000000ul, 0, "HANG_HIGH");
 	// Scheduler::addTask(HIGHER_PRIORITY, ([]() { DEBUGSERIAL.printf("hanging HIGHER priority now...\n"); DEBUGSERIAL.printf("boop elapsed: %lu, timenow:%lu\n", micros()-sss, micros()); while(1);}), 30000000ul, 0, "HANG_HIGHER");
 
-	Scheduler::startHwTimer();
+	//Scheduler::startHwTimer();
 
 }
 
@@ -110,6 +110,10 @@ void loop()
 void getGPS()
 {
 	gps->poll();
+	if (gps->sentenceAvailable())
+	{
+		gps->parseSentence();
+	}
 }
 
 void printGPS()
@@ -125,7 +129,7 @@ void printGPS()
 	if (gps->newValuesSinceDataRead())
 	{
 		gps->dataRead();
-		Serial.printf("Location: %f, %f altitude %f\n\r", gps->latitude, gps->longitude, gps->altitude);
+		DEBUGSERIAL.printf("Location: %f, %f altitude %f\n\r", gps->latitude, gps->longitude, gps->altitude);
 	}
 }
 
@@ -138,25 +142,12 @@ struct PathAddress addresses[] = {
 
 void broadcastLocation(const char *comment)
 {
-	if(!gps->fix) Telemetry::printf(MSG_WARNING, "No GPS Fix");
-	Telemetry::printf(MSG_GPS, "%d,%u,%u,%u,%f,%f,%f,%u,%f,%u", gps->fix, gps->day, gps->hour, gps->minute ,gps->latitude, gps->longitude,gps->altitude,gps->heading,gps->speed,gps->satellites);
+	if(!gps->fix) Telemetry::printf(MSG_WARNING, "No GPS Fix\n");
+	Telemetry::printf(MSG_GPS, "%d,%u,%u,%u,%f,%f,%f,%u,%f,%u\n", gps->fix, gps->day, gps->hour, gps->minute ,gps->latitude, gps->longitude,gps->altitude,gps->heading,gps->speed,gps->satellites);
 	// If above 5000 feet switch to a single hop path
 	int nAddresses;
-	if (gps->altitude > 1500) {
-	// APRS recomendations for > 5000 feet is:
-	// Path: WIDE2-1 is acceptable, but no path is preferred.
-	nAddresses = 3;
 	addresses[2].callsign = "WIDE2";
 	addresses[2].ssid = 1;
-	} else {
-	// Below 1500 meters use a much more generous path (assuming a mobile station)
-	// Path is "WIDE1-1,WIDE2-2"
-	nAddresses = 4;
-	addresses[2].callsign = "WIDE1";
-	addresses[2].ssid = 1;
-	addresses[3].callsign = "WIDE2";
-	addresses[3].ssid = 2;
-	}
 
 	// For debugging print out the path
 	/*Serial.print("APRS(");

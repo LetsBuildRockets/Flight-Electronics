@@ -80,7 +80,7 @@ void Sequencer::printTaskList()
 	Serial.println("Sequencer Task List: ");
 	while(head != NULL)
 	{
-		Serial.printf("%8dms: %6lums, %s\n", head->startTime, head->duration, head->comment);
+		Telemetry::printf(MSG_INFO, "%8dms: %6lums, %s\n", head->startTime, head->duration, head->comment);
 		head = (struct SeqTask*) head->nextSeqTask;
 	}
 }
