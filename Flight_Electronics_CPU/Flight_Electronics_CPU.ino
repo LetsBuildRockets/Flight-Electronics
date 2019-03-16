@@ -38,15 +38,15 @@ void setup()
 	IMU::init();
 	Scheduler::init();
 
-//	sequencerT = new Sequencer(-30000);
-//	sequencerT->addSeqTask(-20000, 0, ([](){Telemetry::printf(MSG_INFO, "bleh");}), "bleh");
-//	sequencerT->addSeqTask(-10000, 10, ([](){Telemetry::printf(MSG_INFO, "bleh2");}), "bleh2");
-//	sequencerT->addSeqTask(0, 10, ([](){Telemetry::printf(MSG_INFO, "bleh3");}), "bleh3");
-//	sequencerT->addSeqTask(100, 10, ([](){Telemetry::printf(MSG_INFO, "liftoff");}), "fucking liftoff");
-//	sequencerT->printTaskList();
 
-
-
+	sequencerT = new Sequencer(-30000);
+	Serial.println("got this far...0");
+	sequencerT->addSeqTask(-20000, 0, ([](){Telemetry::printf(MSG_INFO, "bleh");}), "bleh");
+	sequencerT->addSeqTask(-10000, 10, ([](){Telemetry::printf(MSG_INFO, "bleh2");}), "bleh2");
+	sequencerT->addSeqTask(0, 10, ([](){Telemetry::printf(MSG_INFO, "bleh3");}), "bleh3");
+	sequencerT->addSeqTask(100, 10, ([](){Telemetry::printf(MSG_INFO, "liftoff");}), "fucking liftoff");
+	Serial.println("got this far...1");
+	sequencerT->printTaskList();
 
 
 	pinMode(PIN_LED, OUTPUT);
@@ -55,20 +55,22 @@ void setup()
 
 	// TODO: sequencer
 	// TODO: Flight Calculator
-	// TODO: make atimeter interrupt safe.
+	// TODO: make altimeter interrupt safe.
 	// TODO: SD card buffering, and decrease timeout
 	// TODO: AX-12A Servo
 	// TODO: APRS
 
-	Scheduler::addTask(HIGH_PRIORITY, Analog::updateData, 500000lu, 0, "Update Analog Data");
-//	Scheduler::addTask(HIGH_PRIORITY, ([]() {sequencerT->tick();}), 1000lu, 0, "Tick Seqeuncer");
-//	Scheduler::addTask(HIGH_PRIORITY, ([]() {sequencerT->start();}), 0, 10000000ul, "Start Seqeuncer");
+	// TODO: Um using high priority tasks breaks everything... don't do it until its fixed. thanks bye.
+
+	Scheduler::addTask(LOW_PRIORITY, Analog::updateData, 500000lu, 0, "Update Analog Data");
+	Scheduler::addTask(LOW_PRIORITY, ([]() {sequencerT->tick();}), 1000lu, 0, "Tick Seqeuncer");
+	Scheduler::addTask(LOW_PRIORITY, ([]() {sequencerT->start();}), 0, 10000000ul, "Start Seqeuncer");
 	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "avg alt: %.2f m\n", Altimeter::getAltitude()); }), 1000000lu, 0, "get Alt value");
-	Scheduler::addTask(HIGH_PRIORITY, Altimeter::getNewSample, 100000lu, 1000000lu, "get Alt sample");
+	Scheduler::addTask(LOW_PRIORITY, Altimeter::getNewSample, 100000lu, 1000000lu, "get Alt sample");
 //	Scheduler::addTask(LOW_PRIORITY, getIMUData, 100000lu, 0, "IMU update");
-	Scheduler::addTask(HIGHER_PRIORITY, ([]() { digitalWriteFast(PIN_LED, !(digitalReadFast(PIN_LED))); }), 50000lu, 0, "Blink");
-	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "IMU Calibration: %s\n", IMU::getCalibration().c_str()); }), 5000000lu, 0, "IMU print calibration info");
-	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "average Jitter: %.2f us\n", Scheduler::getAverageJitter()); }), 5000000lu, 0, "print average jitter");
+	Scheduler::addTask(LOW_PRIORITY, ([]() { digitalWriteFast(PIN_LED, !(digitalReadFast(PIN_LED))); }), 500000lu, 0, "Blink");
+//	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "IMU Calibration: %s\n", IMU::getCalibration().c_str()); }), 5000000lu, 0, "IMU print calibration info");
+//	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "average Jitter: %.2f us\n", Scheduler::getAverageJitter()); }), 5000000lu, 0, "print average jitter");
 	Scheduler::addTask(LOW_PRIORITY, checkBatteryStatus, 10000000lu, 0, "Check Battery State");
 	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "Free mem: %lu kB\n", FreeMem()/1000); }), 5000000lu, 0, "mem usage");
 

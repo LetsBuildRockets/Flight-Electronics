@@ -49,7 +49,7 @@ void Logger::printf(const char * format, ...)
 		{
 			Telemetry::printfNOLOG(MSG_ERROR, "Could not log to SD card!\n");
 			if(numberOfSDCardError < SD_ERROR_LIMIT) numberOfSDCardError++;
-			else fileOpen = false;
+			// else fileOpen = false;
 		}
 		logFile.close();
 		va_end(vargs);

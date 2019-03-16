@@ -11,7 +11,6 @@ Sequencer::Sequencer(int32_t countDownStartTime)
 {
 	firstSeqTask = (SeqTask*)malloc(sizeof(SeqTask));
 	listHead = firstSeqTask;
-	state = HOLD;
 
 	if(firstSeqTask == NULL)
 	{
@@ -23,18 +22,20 @@ Sequencer::Sequencer(int32_t countDownStartTime)
 	firstSeqTask->startTime = countDownStartTime;
 	firstSeqTask->duration = 0;
 	firstSeqTask->functionPtr = ([]() {Telemetry::printf(MSG_INFO, "Sequencer Init");});
+	firstSeqTask->nextSeqTask = NULL;
 
 	seqStartTime = 0;
+	state = HAVENOTRUNYET;
 }
 
 Sequencer::~Sequencer()
 {
-	struct SeqTask **head = (struct SeqTask**) firstSeqTask;
+	struct SeqTask *head = (struct SeqTask*) firstSeqTask;
 	while(head != NULL)
 	{
-		struct SeqTask *next = (struct SeqTask*)(*head)->nextSeqTask;
-		free((void*)head);
-		(*head) = next;
+		struct SeqTask *next = (struct SeqTask*)head->nextSeqTask;
+		free(head);
+		head = next;
 	}
 }
 
@@ -46,10 +47,14 @@ int Sequencer::addSeqTask(struct SeqTask newSeqTask)
 
 int Sequencer::addSeqTask(int32_t startTime, uint16_t duration, void (*functionPtr)(void), const char * comment)
 {
-	struct SeqTask **head = (struct SeqTask**) firstSeqTask;
+	struct SeqTask *head = (struct SeqTask*) firstSeqTask;
+	Serial.printf("next: %p\r\n",(head->nextSeqTask));
 	if(head == NULL) return SEQ_ERR_NO_HEAD;
-	while((*head)->nextSeqTask != NULL) (*head) = (struct SeqTask*) (*head)->nextSeqTask;
-	if((*head)->startTime >= startTime)
+	while(head->nextSeqTask != NULL){
+		head = (struct SeqTask*) head->nextSeqTask;
+		Serial.printf("\tnext: %p\r\n",(head->nextSeqTask));
+	}
+	if(head->startTime >= startTime)
 	{
 		Telemetry::printf(MSG_ERROR, "you tried to add a task to a sequence that is out of order!");
 		return SEQ_ERR_OUTOFORDER;
@@ -65,7 +70,7 @@ int Sequencer::addSeqTask(int32_t startTime, uint16_t duration, void (*functionP
 	anotherSeqTask->duration = duration;
 	anotherSeqTask->functionPtr = functionPtr;
 	anotherSeqTask->nextSeqTask = NULL;
-	(*head)->nextSeqTask=anotherSeqTask;
+	head->nextSeqTask=anotherSeqTask;
 	return SEQ_ERR_NONE;
 }
 
@@ -75,7 +80,7 @@ void Sequencer::printTaskList()
 	Serial.println("Sequencer Task List: ");
 	while(head != NULL)
 	{
-		Serial.printf("%dms: %ulms, %s\n", head->startTime, head->duration, head->comment);
+		Serial.printf("%8dms: %6lums, %s\n", head->startTime, head->duration, head->comment);
 		head = (struct SeqTask*) head->nextSeqTask;
 	}
 }
@@ -118,16 +123,25 @@ void Sequencer::tick()
 			break;
 		case(RUNNING):
 		{
-			struct SeqTask **task = (struct SeqTask**) listHead;
-			if(countdownTime - (*task)->startTime > 0)
+			struct SeqTask *task = (struct SeqTask*) listHead;
+			if(countdownTime - task->startTime > 0)
 			{
-				if((*task)->functionPtr != NULL) (*task)->functionPtr();
-				if(countdownTime - (*task)->startTime >= (*task)->duration)
+				if(task->functionPtr != NULL) task->functionPtr();
+				if(countdownTime - task->startTime >= task->duration)
 				{
-					(*task) = (struct SeqTask*) (*task)->nextSeqTask;
+					task = (struct SeqTask*) task->nextSeqTask;
+					if(task == NULL)
+					{
+						Telemetry::printf(MSG_INFO, "Sequence done");
+						state = DONE;
+					}
+					else
+					{
+						listHead = task;
+					}
 				}
 			}
-			if(*task == NULL) state = DONE;
+
 			break;
 		}
 		default:
