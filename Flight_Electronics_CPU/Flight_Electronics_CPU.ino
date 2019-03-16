@@ -63,8 +63,8 @@ void setup()
 	// TODO: Um using high priority tasks breaks everything... don't do it until its fixed. thanks bye.
 
 	Scheduler::addTask(LOW_PRIORITY, Analog::updateData, 500000lu, 0, "Update Analog Data");
-	Scheduler::addTask(LOW_PRIORITY, ([]() {sequencerT->tick();}), 1000lu, 0, "Tick Seqeuncer");
-	Scheduler::addTask(LOW_PRIORITY, ([]() {sequencerT->start();}), 0, 10000000ul, "Start Seqeuncer");
+	//Scheduler::addTask(LOW_PRIORITY, ([]() {sequencerT->tick();}), 1000lu, 0, "Tick Seqeuncer");
+	//Scheduler::addTask(LOW_PRIORITY, ([]() {sequencerT->start();}), 0, 10000000ul, "Start Seqeuncer");
 	Scheduler::addTask(LOW_PRIORITY, ([]() { Telemetry::printf(MSG_INFO, "avg alt: %.2f m\n", Altimeter::getAltitude()); }), 1000000lu, 0, "get Alt value");
 	Scheduler::addTask(LOW_PRIORITY, Altimeter::getNewSample, 100000lu, 1000000lu, "get Alt sample");
 //	Scheduler::addTask(LOW_PRIORITY, getIMUData, 100000lu, 0, "IMU update");
